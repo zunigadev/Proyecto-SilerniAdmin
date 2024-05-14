@@ -17,7 +17,7 @@ export class UserController {
 
     @Get(':email')
     getPrueba(@Param('email') email:string) {
-        return this.userService.findEmail(email);
+        return this.userService.findByEmail(email);
     }
     
 }
