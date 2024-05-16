@@ -1,5 +1,7 @@
+// import { IsString } from "class-validator";
 
-export class RegisterUserDto {
+export class CreateUserDto {
+    
     readonly email: string;
     readonly name: string;
     readonly p_surname: string;

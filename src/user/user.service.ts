@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateUserDto } from './dto/create-user.dto';
 
 
 @Injectable()
@@ -45,11 +46,32 @@ export class UserService {
     return { user, credential };
   }
 
-  // async createUser(createUserDto: CreateUserDto) {
-  //   const result = await this.prisma.user.create({
-  //     data: createUserDto
-  //   });
-  //   return result;
-  // }
+  async createUser(createUserDto: CreateUserDto) {
+
+    // const { email, name, p_surname, m_surname, status, credential } = createUserDto;
+     console.log(createUserDto)//Prueba
+
+    try {
+      const { email, name, p_surname, m_surname, status, credential } = createUserDto;
+
+      await this.prisma.user.create({
+          data: {
+              email,
+              name,
+              p_surname,
+              m_surname,
+              status,
+              credential: {
+                  create: {
+                      password: credential.password,
+                      repPassword: credential.repPassword
+                  }
+              }
+          }
+      }); } catch (error) {
+      console.error(error);
+      throw new Error('Error creating user');
+    }
+  }
 
 }

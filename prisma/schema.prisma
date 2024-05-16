@@ -13,6 +13,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "../src/generated/nestjs-dto"
+  outputToNestJsResourceStructure = "false"
+  flatResourceStructure           = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "false"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = ""
+  classValidation                 = "false"
+  fileNamingStyle                 = "camel"
+  noDependencies                  = "false"
+  outputType                      = "class"
+  definiteAssignmentAssertion     = "false"
+  requiredResponseApiProperty     = "true"
+  prettier                        = "false"
+}
+
 //Auntentication models
 model User {
   idUser Int     @id @default(autoincrement())
@@ -37,5 +58,67 @@ model Credential {
   //Relations
   user User? 
 }
+
+
+
+// Define the DataTutor table
+model DataTutor {
+  idDataTutor     Int    @id @default(autoincrement()) @map("idDataTutor")
+  name            String?   @map("name")
+  lastName        String?   @map("lastName")
+  documentType    String?   @map("documentType")
+  document        String?   @map("document")
+  phone           String?   @map("phone")
+  relationship    String?   @map("relationship")
+  email           String?   @map("email")
+  gender          String?   @map("gender")
+
+  // Define the reverse relationship with PostulationChild
+  postulationChild PostulationChild[]
+
+  @@map("DataTutor")
+}
+
+// Define the PostulationChild table
+model PostulationChild {
+  idPostulationChild     Int      @id @default(autoincrement()) @map("idPostulationChild")
+  name                   String?  @map("name")
+  paternalLastName       String?  @map("paternalLastName")
+  maternalLastName       String?  @map("maternalLastName")
+  phone                  String?  @map("phone")
+  birthDate              String?  @map("birthDate")
+  email                  String?  @map("email")
+  address                String?  @map("address")
+  gender                 String?  @map("gender")
+  justification          String?  @map("justification")
+  grade                  String?  @map("grade")
+  postulationChildCol    String?  @map("PostulationChildcol")
+  level                  String?  @map("level")
+  dataTutorIdDataTutor   Int   @map("DataTutor_idDataTutor")
+
+  // Define the relationship with DataTutor
+  dataTutor              DataTutor  @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
+  filesPostulations                 FilesPostulation[]
+
+
+  @@map("PostulationChild")
+}
+
+
+
+// Define the FilesPostulation table
+model FilesPostulation {
+  idFilesPostulation                Int             @id @default(autoincrement()) @map("idFilesPostulation")
+  name                              String?         @map("name")
+  link                              String?         @map("link")
+  postulationChildIdPostulationChild Int             @map("PostulationChild_idPostulationChild")
+
+  // Define the relationship with PostulationChild
+  postulationChild                   PostulationChild @relation(fields: [postulationChildIdPostulationChild], references: [idPostulationChild])
+
+  @@map("FilesPostulation")
+}
+
+
 
 
