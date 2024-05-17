@@ -4,19 +4,18 @@ import {ApiProperty} from '@nestjs/swagger'
 
 
 
-export class ConnectPostulationChildDto {
+export class ConnectSequenceCounterDto {
   @ApiProperty({
   type: 'integer',
   format: 'int32',
   required: false,
   nullable: true,
 })
-idPostulationChild?: number ;
+id?: number ;
 @ApiProperty({
-  type: 'integer',
-  format: 'int32',
+  type: 'string',
   required: false,
   nullable: true,
 })
-credentialId?: number ;
+name?: string ;
 }

@@ -11,10 +11,6 @@ idUser: number ;
 @ApiProperty({
   type: 'string',
 })
-email: string ;
-@ApiProperty({
-  type: 'string',
-})
 name: string ;
 @ApiProperty({
   type: 'string',

@@ -2,6 +2,7 @@
 import {ApiProperty} from '@nestjs/swagger'
 import {DataTutor} from './dataTutor.entity'
 import {FilesPostulation} from './filesPostulation.entity'
+import {Credential} from './credential.entity'
 
 
 export class PostulationChild {
@@ -88,4 +89,15 @@ dataTutor?: DataTutor ;
   required: false,
 })
 filesPostulations?: FilesPostulation[] ;
+@ApiProperty({
+  required: false,
+  nullable: true,
+})
+credential?: Credential  | null;
+@ApiProperty({
+  type: 'integer',
+  format: 'int32',
+  nullable: true,
+})
+credentialId: number  | null;
 }

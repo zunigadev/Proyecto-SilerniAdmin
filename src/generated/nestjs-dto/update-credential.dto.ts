@@ -8,6 +8,18 @@ export class UpdateCredentialDto {
   @ApiProperty({
   type: 'string',
   required: false,
+  nullable: true,
+})
+code?: string  | null;
+@ApiProperty({
+  type: 'string',
+  required: false,
+  nullable: true,
+})
+email?: string  | null;
+@ApiProperty({
+  type: 'string',
+  required: false,
 })
 password?: string ;
 @ApiProperty({

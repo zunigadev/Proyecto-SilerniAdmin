@@ -10,6 +10,16 @@ export class CredentialDto {
 idCredential: number ;
 @ApiProperty({
   type: 'string',
+  nullable: true,
+})
+code: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+email: string  | null;
+@ApiProperty({
+  type: 'string',
 })
 password: string ;
 @ApiProperty({

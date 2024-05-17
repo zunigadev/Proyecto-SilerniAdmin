@@ -34,92 +34,96 @@ generator nestjsDto {
   prettier                        = "false"
 }
 
+model SequenceCounter {
+  id       Int    @id @default(autoincrement())
+  name     String @unique
+  lastUsed Int
+}
+
 //Auntentication models
 model User {
-  idUser Int     @id @default(autoincrement())
-  email  String  @unique
-  name   String
+  idUser    Int    @id @default(autoincrement())
+  name      String
   p_surname String
   m_surname String
-  status String 
+  status    String
 
   //Relations
-  credential Credential @relation(fields: [credentialId], references: [idCredential])
-  credentialId Int @unique
-
+  credential   Credential @relation(fields: [credentialId], references: [idCredential])
+  credentialId Int        @unique
 }
 
 model Credential {
-  idCredential Int @id @default(autoincrement())
-  //code String @unique 
-  password String  
-  repPassword String 
+  idCredential Int     @id @default(autoincrement())
+  code         String? @unique
+  email        String? @unique
+  password     String
+  repPassword  String
 
   //Relations
-  user User? 
+  user             User?
+  dataTutor        DataTutor?
+  postulationChild PostulationChild?
 }
-
-
 
 // Define the DataTutor table
 model DataTutor {
-  idDataTutor     Int    @id @default(autoincrement()) @map("idDataTutor")
-  name            String?   @map("name")
-  lastName        String?   @map("lastName")
-  documentType    String?   @map("documentType")
-  document        String?   @map("document")
-  phone           String?   @map("phone")
-  relationship    String?   @map("relationship")
-  email           String?   @map("email")
-  gender          String?   @map("gender")
+  idDataTutor  Int     @id @default(autoincrement()) @map("idDataTutor")
+  name         String? @map("name")
+  lastName     String? @map("lastName")
+  documentType String? @map("documentType")
+  document     String? @map("document")
+  phone        String? @map("phone")
+  relationship String? @map("relationship")
+  email        String? @map("email")
+  gender       String? @map("gender")
 
   // Define the reverse relationship with PostulationChild
   postulationChild PostulationChild[]
+
+  credential   Credential? @relation(fields: [credentialId], references: [idCredential])
+  credentialId Int?        @unique
 
   @@map("DataTutor")
 }
 
 // Define the PostulationChild table
 model PostulationChild {
-  idPostulationChild     Int      @id @default(autoincrement()) @map("idPostulationChild")
-  name                   String?  @map("name")
-  paternalLastName       String?  @map("paternalLastName")
-  maternalLastName       String?  @map("maternalLastName")
-  phone                  String?  @map("phone")
-  birthDate              String?  @map("birthDate")
-  email                  String?  @map("email")
-  address                String?  @map("address")
-  gender                 String?  @map("gender")
-  justification          String?  @map("justification")
-  grade                  String?  @map("grade")
-  postulationChildCol    String?  @map("PostulationChildcol")
-  level                  String?  @map("level")
-  dataTutorIdDataTutor   Int      @map("DataTutor_idDataTutor")
-  status                 String   @map("postulationStatus") @default("sending")
+  idPostulationChild   Int     @id @default(autoincrement()) @map("idPostulationChild")
+  name                 String? @map("name")
+  paternalLastName     String? @map("paternalLastName")
+  maternalLastName     String? @map("maternalLastName")
+  phone                String? @map("phone")
+  birthDate            String? @map("birthDate")
+  email                String? @map("email")
+  address              String? @map("address")
+  gender               String? @map("gender")
+  justification        String? @map("justification")
+  grade                String? @map("grade")
+  postulationChildCol  String? @map("PostulationChildcol")
+  level                String? @map("level")
+  dataTutorIdDataTutor Int     @map("DataTutor_idDataTutor")
+  status               String  @default("sending") @map("postulationStatus")
 
   // Define the relationship with DataTutor
-  dataTutor              DataTutor  @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
-  filesPostulations                 FilesPostulation[]
+  dataTutor         DataTutor          @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
+  filesPostulations FilesPostulation[]
 
+  credential   Credential? @relation(fields: [credentialId], references: [idCredential])
+  credentialId Int?        @unique
 
   @@map("PostulationChild")
 }
 
-
-
 // Define the FilesPostulation table
 model FilesPostulation {
-  idFilesPostulation                Int             @id @default(autoincrement()) @map("idFilesPostulation")
-  name                              String?         @map("name")
-  link                              String?         @map("link")
-  postulationChildIdPostulationChild Int             @map("PostulationChild_idPostulationChild")
+  idFilesPostulation                 Int     @id @default(autoincrement()) @map("idFilesPostulation")
+  name                               String? @map("name")
+  link                               String? @map("link")
+  postulationChildIdPostulationChild Int     @map("PostulationChild_idPostulationChild")
 
   // Define the relationship with PostulationChild
-  postulationChild                   PostulationChild @relation(fields: [postulationChildIdPostulationChild], references: [idPostulationChild])
+  postulationChild PostulationChild @relation(fields: [postulationChildIdPostulationChild], references: [idPostulationChild])
 
   @@map("FilesPostulation")
 }
-
-
-
-

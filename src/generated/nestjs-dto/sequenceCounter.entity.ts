@@ -2,21 +2,19 @@
 import {ApiProperty} from '@nestjs/swagger'
 
 
-
-
-export class ConnectUserDto {
+export class SequenceCounter {
   @ApiProperty({
   type: 'integer',
   format: 'int32',
-  required: false,
-  nullable: true,
 })
-idUser?: number ;
+id: number ;
+@ApiProperty({
+  type: 'string',
+})
+name: string ;
 @ApiProperty({
   type: 'integer',
   format: 'int32',
-  required: false,
-  nullable: true,
 })
-credentialId?: number ;
+lastUsed: number ;
 }
