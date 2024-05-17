@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CredentialService } from 'src/credential/credential.service';
 
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private readonly credentialService: CredentialService) { }
 
   async findAll(): Promise<User[]> {
     return await this.prisma.user.findMany();
@@ -37,7 +38,7 @@ export class UserService {
     return { credential };
   }
 
-  createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto) {
 
     // const { email, name, p_surname, m_surname, status, credential } = createUserDto;
     // return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
@@ -46,6 +47,14 @@ export class UserService {
 
       const { name, p_surname, m_surname, status, credential } = createUserDto;
       console.log(createUserDto) //Prueba de consola
+
+      if (credential.password === null) {
+        const temporaryPassword = await this.credentialService.generateTemporaryPassword(8);
+        credential.password = temporaryPassword;
+        credential.repPassword = temporaryPassword
+      }
+
+
       return this.prisma.user.create({
           data: {
               name,
@@ -57,7 +66,7 @@ export class UserService {
                     code: credential.code,
                     email: credential.email,
                     password: credential.password,
-                    repPassword: credential.repPassword
+                    repPassword: credential.repPassword,
                   }
               }
           }

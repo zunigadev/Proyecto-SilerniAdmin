@@ -18,22 +18,43 @@ export class ApplicationService {
     }
 
     async createApplication(dataTutor: CreateDataTutorDto){
-        const {postulationChildren, ...dataTutorToSave} = dataTutor
 
-        const postulationsToSave = postulationChildren.map((currrentPostulation) => {
-            const {filesPostulations, ...dataPostulationToSave} = currrentPostulation
+        try {
+            await this.prisma.$transaction(async (tx: PrismaClient) => {
+                const {postulationChildren, ...dataTutorToSave} = dataTutor
 
-            const filesToSave = {
-                create: filesPostulations
-            }
+                // check if exists credential with email datatutor.
+                const tutorCredential = await tx.credential.findUnique({
+                    where: {
+                        email: dataTutorToSave.email
+                    }
+                })
 
-            return {
-                ...dataPostulationToSave,
-                filesPostulations: filesToSave,
-            }
-        })
+                if (tutorCredential) {
+                    throw new ConflictException('Email already registered')
+                }
 
-        return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
+                const postulationsToSave = postulationChildren.map((currrentPostulation) => {
+                    const {filesPostulations, ...dataPostulationToSave} = currrentPostulation
+
+                    const filesToSave = {
+                        create: filesPostulations
+                    }
+
+                    return {
+                        ...dataPostulationToSave,
+                        filesPostulations: filesToSave,
+                    }
+                })
+
+                const savedDataTutor = await tx.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
+
+                // Crear credenciales para tutor
+                await this.createCredentialsAndLinkToTutor(tx, savedDataTutor.idDataTutor);
+            })
+        } catch (error) {
+            throw error
+        }
     }
 
     async changeStatusApplication(id: number, statusApplication: UpdateStatusChildDto) {
@@ -71,9 +92,6 @@ export class ApplicationService {
                         },
                     },
                     });
-            
-                    // Crear credenciales para tutor
-                    await this.createCredentialsAndLinkToTutor(prisma, postulationChild.dataTutor.idDataTutor);
                 } else {
                     // Solo actualizar el estado si no es aceptado
                     await prisma.postulationChild.update({
