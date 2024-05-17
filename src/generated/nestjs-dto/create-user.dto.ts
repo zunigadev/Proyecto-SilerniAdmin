@@ -8,10 +8,6 @@ export class CreateUserDto {
   @ApiProperty({
   type: 'string',
 })
-email: string ;
-@ApiProperty({
-  type: 'string',
-})
 name: string ;
 @ApiProperty({
   type: 'string',

@@ -16,9 +16,9 @@ export class UserController {
         return this.userService.findByID(id);
     }
 
-    @Get(':email')
-    getEmail(@Param('email') email:string) {
-        return this.userService.findByEmail(email);
+    @Get(':code')
+    getEmail(@Param('code') code:string) {
+        return this.userService.findByCode(code);
     }
 
     //Prueba Registro

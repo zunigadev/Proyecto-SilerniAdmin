@@ -10,10 +10,22 @@ export class CredentialDto {
 idCredential: number ;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-password: string ;
+code: string  | null;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-repPassword: string ;
+email: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+password: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+repPassword: string  | null;
 }

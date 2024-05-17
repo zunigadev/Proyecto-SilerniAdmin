@@ -1,4 +1,4 @@
-import { Body, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';

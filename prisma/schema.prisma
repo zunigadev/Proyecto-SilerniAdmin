@@ -37,7 +37,6 @@ generator nestjsDto {
 //Auntentication models
 model User {
   idUser Int     @id @default(autoincrement())
-  email  String  @unique
   name   String
   p_surname String
   m_surname String
@@ -51,9 +50,10 @@ model User {
 
 model Credential {
   idCredential Int @id @default(autoincrement())
-  //code String @unique 
-  password String  
-  repPassword String 
+  code String? @unique 
+  email String? @unique
+  password String?  
+  repPassword String? 
 
   //Relations
   user User? 

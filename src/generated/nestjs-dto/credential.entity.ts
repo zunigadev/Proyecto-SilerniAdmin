@@ -11,12 +11,24 @@ export class Credential {
 idCredential: number ;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-password: string ;
+code: string  | null;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-repPassword: string ;
+email: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+password: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+repPassword: string  | null;
 @ApiProperty({
   required: false,
   nullable: true,

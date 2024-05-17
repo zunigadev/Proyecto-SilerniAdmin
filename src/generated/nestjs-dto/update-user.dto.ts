@@ -9,11 +9,6 @@ export class UpdateUserDto {
   type: 'string',
   required: false,
 })
-email?: string ;
-@ApiProperty({
-  type: 'string',
-  required: false,
-})
 name?: string ;
 @ApiProperty({
   type: 'string',

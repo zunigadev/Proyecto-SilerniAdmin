@@ -11,13 +11,13 @@ export class AuthService {
 
     async logIn(loginDto: LoginAuthDto ) {
 
-        const {email,password} = loginDto
-        const user = await this.userService.findByEmail(email);
+        const {code,password} = loginDto
+        const user = await this.userService.findByCode(code);
 
         if (!user) {
-            throw new UnauthorizedException("Invalid email");
+            throw new UnauthorizedException("Invalid code");
         }
-        console.log(email) // Prueba de consola
+        console.log(code) // Prueba de consola
         const userpassword = user.credential.password;
         const isPasswordValid = await bcryptjs.compareSync(password,userpassword);
 
@@ -37,11 +37,12 @@ export class AuthService {
 
     async register(registerDto: RegisterUserDto) {
 
-        const { password } = registerDto.credential;
-        const passwordHash = await hash(password, 10);
+        // const { email, code } = registerDto.credential;
 
-        registerDto.credential.password = passwordHash;
-        registerDto = {...registerDto,credential:{password:passwordHash,repPassword:passwordHash}}
+        // const passwordHash = await hash(password, 10);
+
+        // registerDto.credential.password = passwordHash;
+        // registerDto = {...registerDto,credential:{email, code/*, password:passwordHash,repPassword:passwordHash}*/}
         
         return this.userService.createUser(registerDto)
 

@@ -23,55 +23,51 @@ export class UserService {
     });
   }
 
-  async findByEmail(email: string) {
-    const user = await this.prisma.user.findFirst({
+  async findByCode(code: string) {
+    const credential = await this.prisma.credential.findFirst({
       where: {
-        email: email
+        code: code
       }
     });
 
-    if (!user) { 
+    if (!credential) { 
       return null; 
     }
 
-    const credential = await this.prisma.credential.findFirst({
-      where: {
-        idCredential: user.credentialId
-      },
-      select: {
-        password: true
-      }
-    });
-
-    return { user, credential };
+    return { credential };
   }
 
-  async createUser(createUserDto: CreateUserDto) {
+  createUser(createUserDto: CreateUserDto) {
 
     // const { email, name, p_surname, m_surname, status, credential } = createUserDto;
-     console.log(createUserDto)//Prueba
+    // return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
 
     try {
-      const { email, name, p_surname, m_surname, status, credential } = createUserDto;
 
-      await this.prisma.user.create({
+      const { name, p_surname, m_surname, status, credential } = createUserDto;
+      console.log(createUserDto) //Prueba de consola
+      return this.prisma.user.create({
           data: {
-              email,
               name,
               p_surname,
               m_surname,
               status,
               credential: {
                   create: {
-                      password: credential.password,
-                      repPassword: credential.repPassword
+                    code: credential.code,
+                    email: credential.email,
+                    password: credential.password,
+                    repPassword: credential.repPassword
                   }
               }
           }
-      }); } catch (error) {
+      }); 
+    } catch (error) {
       console.error(error);
       throw new Error('Error creating user');
     }
   }
+
+  
 
 }
