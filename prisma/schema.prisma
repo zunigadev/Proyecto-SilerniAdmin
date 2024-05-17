@@ -94,7 +94,8 @@ model PostulationChild {
   grade                  String?  @map("grade")
   postulationChildCol    String?  @map("PostulationChildcol")
   level                  String?  @map("level")
-  dataTutorIdDataTutor   Int   @map("DataTutor_idDataTutor")
+  dataTutorIdDataTutor   Int      @map("DataTutor_idDataTutor")
+  status                 String   @map("postulationStatus") @default("sending")
 
   // Define the relationship with DataTutor
   dataTutor              DataTutor  @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])

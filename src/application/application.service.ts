@@ -1,6 +1,7 @@
 import { Body, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
+import { UpdateStatusChildDto } from './dto/update-status.dto';
 
 @Injectable()
 export class ApplicationService {
@@ -27,6 +28,16 @@ export class ApplicationService {
         })
 
         return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
+    }
+
+    async changeStatusApplication(id: number,statusApplication: UpdateStatusChildDto){
+
+        const postulationChild = await this.prisma.postulationChild.update({
+            where: {idPostulationChild: id},
+            data: {status: statusApplication.status}
+        })
+
+        return postulationChild
     }
 
 

@@ -68,4 +68,8 @@ postulationChildCol: string  | null;
   nullable: true,
 })
 level: string  | null;
+@ApiProperty({
+  type: 'string',
+})
+status: string ;
 }

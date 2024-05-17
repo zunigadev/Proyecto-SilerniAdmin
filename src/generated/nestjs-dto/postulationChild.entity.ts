@@ -76,6 +76,10 @@ level: string  | null;
 })
 dataTutorIdDataTutor: number ;
 @ApiProperty({
+  type: 'string',
+})
+status: string ;
+@ApiProperty({
   required: false,
 })
 dataTutor?: DataTutor ;

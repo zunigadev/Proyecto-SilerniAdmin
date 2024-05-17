@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
+import { UpdateStatusChildDto } from './dto/update-status.dto';
 
 @Controller('application')
 export class ApplicationController {
@@ -16,16 +17,18 @@ export class ApplicationController {
 
     @Post()
     @UseInterceptors(FilesInterceptor('files'))
-    async uploadFiles(@Body() data: any, @UploadedFiles() files: Express.Multer.File[]) {
+    async uploadFiles(@Body() data: any, @UploadedFiles() files: Express.Multer.File[]) {//Verificar tipo de dato any
         if (!files || files.length === 0) {
             throw new Error('No files uploaded');
         }
         const dataTutor:CreateDataTutorDto = JSON.parse(data.body);
-        // Llama al servicio para manejar la subida a terceros
-        // await this.uploadService.uploadFiles(files);
-        console.log(files)
-        console.log("message: 'Files uploaded successfully'")
+
         return this.applicationService.createApplication(dataTutor);
+    }
+
+    @Patch(':id')
+    async changeStatus(@Param('id') id: number, @Body() changeStatus: UpdateStatusChildDto) {
+        return this.applicationService.changeStatusApplication(Number(id), changeStatus)
     }
 
 }

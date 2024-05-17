@@ -17,19 +17,20 @@ export class AuthService {
         if (!user) {
             throw new UnauthorizedException("Invalid email");
         }
+        console.log(email) // Prueba de consola
+        const userpassword = user.credential.password;
+        const isPasswordValid = await bcryptjs.compareSync(password,userpassword);
 
-        const isPasswordValid = await bcryptjs.compareSync(password,user.credential.password);
+        console.log(password, userpassword) // Prueba de consola
+        console.log(isPasswordValid) // Prueba de consola
 
-        console.log(typeof password, typeof user.credential.password)
-        console.log(isPasswordValid)
+        if (!isPasswordValid) {
+            throw new UnauthorizedException("Invalid password");
+          }
 
-        // if (!isPasswordValid) {
-        //     throw new UnauthorizedException("Invalid password");
-        //   }
-
-        // return {
-        //     email: user.user.email,
-        // };
+        return {
+            user
+        };
     }
 
     // Pruebas
