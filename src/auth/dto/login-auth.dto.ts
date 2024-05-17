@@ -1,9 +1,9 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsString } from "class-validator";
+import { IsString } from "class-validator";
 
 export class LoginAuthDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  code: string;
 
   @IsString()
   @Transform(({ value }) => value.trim())

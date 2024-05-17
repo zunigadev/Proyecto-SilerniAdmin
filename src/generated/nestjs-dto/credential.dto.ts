@@ -20,10 +20,12 @@ code: string  | null;
 email: string  | null;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-password: string ;
+password: string  | null;
 @ApiProperty({
   type: 'string',
+  nullable: true,
 })
-repPassword: string ;
+repPassword: string  | null;
 }
