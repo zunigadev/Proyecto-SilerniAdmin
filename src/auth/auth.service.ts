@@ -37,12 +37,12 @@ export class AuthService {
 
     async register(registerDto: RegisterUserDto) {
 
-        // const { email, code } = registerDto.credential;
+        const { email, password } = registerDto.credential;
 
-        // const passwordHash = await hash(password, 10);
+        const passwordHash = await hash(password, 10);
 
-        // registerDto.credential.password = passwordHash;
-        // registerDto = {...registerDto,credential:{email, code/*, password:passwordHash,repPassword:passwordHash}*/}
+        registerDto.credential.password = passwordHash;
+        registerDto = {...registerDto,credential:{email, password:passwordHash, repPassword:""}}
         
         return this.userService.createUser(registerDto)
 
