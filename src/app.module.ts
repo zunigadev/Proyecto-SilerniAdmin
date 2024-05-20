@@ -8,6 +8,7 @@ import { ApplicationController } from './application/application.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
+import { RoleModule } from './role/role.module';
 import { IamModule } from './iam/iam.module';
 import { RoleModule } from './role/role.module';
 
@@ -18,9 +19,12 @@ import { RoleModule } from './role/role.module';
     UserModule,
     ApplicationModule,
    
+   
     CredentialModule,
    
+   
     SequenceCounterModule,
+    RoleModule,
     RoleModule,
   ],
   controllers: [AppController, ApplicationController],
