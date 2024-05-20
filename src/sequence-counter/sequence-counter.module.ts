@@ -4,6 +4,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],
-  providers: [SequenceCounterService]
+  providers: [SequenceCounterService],
+  exports: [SequenceCounterService],
 })
 export class SequenceCounterModule {}
