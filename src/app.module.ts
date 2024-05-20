@@ -14,10 +14,12 @@ import { SequenceCounterModule } from './sequence-counter/sequence-counter.modul
   imports: [
     PrismaModule,
     AuthModule,
-    UserModule, 
-    ApplicationModule, CredentialModule, SequenceCounterModule,
+    UserModule,
+    ApplicationModule,
+    CredentialModule,
+    SequenceCounterModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
 })
-export class AppModule {}
+export class AppModule { }

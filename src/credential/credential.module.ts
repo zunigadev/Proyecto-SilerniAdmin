@@ -6,6 +6,6 @@ import { SequenceCounterModule } from 'src/sequence-counter/sequence-counter.mod
 @Module({
   imports: [PrismaModule, SequenceCounterModule],
   providers: [CredentialService],
-  exports: [CredentialService]
+  exports: [CredentialService],
 })
 export class CredentialModule {}

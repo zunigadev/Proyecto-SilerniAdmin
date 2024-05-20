@@ -23,14 +23,12 @@ code: string  | null;
 email: string  | null;
 @ApiProperty({
   type: 'string',
-  nullable: true,
 })
-password: string  | null;
+password: string ;
 @ApiProperty({
   type: 'string',
-  nullable: true,
 })
-repPassword: string  | null;
+repPassword: string ;
 @ApiProperty({
   required: false,
   nullable: true,
