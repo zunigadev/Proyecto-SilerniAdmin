@@ -9,13 +9,17 @@ import { ApplicationController } from './application/application.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
+import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
     UserModule, 
-    ApplicationModule, CredentialModule, SequenceCounterModule,
+    ApplicationModule,
+    CredentialModule,
+    SequenceCounterModule,
+    RoleModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
