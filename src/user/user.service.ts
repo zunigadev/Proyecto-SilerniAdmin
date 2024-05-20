@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { CredentialService } from 'src/credential/credential.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { CredentialService } from 'src/credential/credential.service';
+import { HashingService } from 'src/hashing/hashing.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
-    private readonly credentialService: CredentialService
-  ) {}
+    private readonly credentialService: CredentialService,
+    private readonly hashingService: HashingService,
+  ) { }
 
   async findAll(): Promise<User[]> {
     return await this.prisma.user.findMany();
@@ -27,17 +29,40 @@ export class UserService {
   }
 
   async findByCode(code: string) {
-    const credential = await this.prisma.credential.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: {
-        code: code,
+        credential: {
+          code
+        },
       },
+      include: {
+        credential: true
+      }
     });
 
-    if (!credential) {
+    if (!user) {
       return null;
     }
 
-    return { credential };
+    return user;
+  }
+
+  async findById(id: number) {
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        idUser: id,
+      },
+      include: {
+        credential: true,
+      }
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found")
+    }
+
+    return user;
   }
 
   async createUser(createUserDto: CreateUserDto) {
@@ -53,6 +78,9 @@ export class UserService {
           await this.credentialService.generateTemporaryPassword(8);
         credential.password = temporaryPassword;
         credential.repPassword = temporaryPassword;
+      } else {
+        credential.password = await this.hashingService.hash(credential.password)
+        credential.repPassword = credential.password
       }
 
       return this.prisma.user.create({

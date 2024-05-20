@@ -26,4 +26,9 @@ password: string ;
   type: 'string',
 })
 repPassword: string ;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+tokenId: string  | null;
 }

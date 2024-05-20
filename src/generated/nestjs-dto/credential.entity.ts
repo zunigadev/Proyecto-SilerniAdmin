@@ -30,6 +30,11 @@ password: string ;
 })
 repPassword: string ;
 @ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+tokenId: string  | null;
+@ApiProperty({
   required: false,
   nullable: true,
 })

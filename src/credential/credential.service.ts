@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { hash } from 'bcryptjs';
+import { HashingService } from 'src/hashing/hashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SequenceCounterService } from 'src/sequence-counter/sequence-counter.service';
 import { CreateCredentialDto } from './dto/create-credential.dto';
@@ -10,8 +10,9 @@ export class CredentialService {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly sequenceCounterService: SequenceCounterService
-  ) {}
+    private readonly sequenceCounterService: SequenceCounterService,
+    private readonly hashingService: HashingService,
+  ) { }
 
   async generateTemporaryPassword(length: number) {
     const characters =
@@ -23,7 +24,7 @@ export class CredentialService {
       );
     }
 
-    const passwordHash = await hash(temporaryPassword, 10);
+    const passwordHash = await this.hashingService.hash(temporaryPassword);
     return passwordHash;
   }
 
