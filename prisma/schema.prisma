@@ -51,11 +51,6 @@ model User {
   //Relations Credential
   credential   Credential @relation(fields: [credentialId], references: [idCredential])
   credentialId Int        @unique
-
-  role    Role @relation(fields: [role_id], references: [id])
-  role_id Int  
-
-  // createdMenus Menu[] @relation("access_user")
 }
 
 model Credential {
@@ -134,46 +129,6 @@ model FilesPostulation {
   @@map("FilesPostulation")
 }
 
-//Permission and Roles 
-model Role {
-  id         Int       @unique @default(autoincrement())
-  name       String    
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
-  deleted_at DateTime? @db.Timestamp()
 
-  Permission Permission[]
-  User       User[]
-
-  @@map("roles")
-}
-
-model Permission {
-  id         Int     @unique @default(autoincrement())
-  role       Role    @relation(fields: [role_id], references: [id])
-  role_id    Int     
-  action     String  
-  subject    String  
-  inverted   Boolean @default(false)
-  conditions Json?   
-  reason     String? @db.Text()
-
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt()
-  deleted_at DateTime? @db.Timestamp()
-
-  @@map("permissions")
-}
-
-// //Modules //Test
-// model Menu {
-//   id   Int    @unique @default(autoincrement())
-//   name String 
-
-//   created_user User @relation(name: "access_user", fields: [access_by], references: [idUser])
-//   created_by   Int  
-
-//   @@map("menus")
-// }
 
 

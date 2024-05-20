@@ -10,7 +10,6 @@ import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
 import { RoleModule } from './role/role.module';
 import { IamModule } from './iam/iam.module';
-import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
