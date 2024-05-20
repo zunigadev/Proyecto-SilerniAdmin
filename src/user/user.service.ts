@@ -1,13 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { CredentialService } from 'src/credential/credential.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { CredentialService } from 'src/credential/credential.service';
-
+import { HashingService } from 'src/hashing/hashing.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService, private readonly credentialService: CredentialService) { }
+  constructor(
+    private prisma: PrismaService,
+    private readonly credentialService: CredentialService,
+    private readonly hashingService: HashingService,
+  ) { }
 
   async findAll(): Promise<User[]> {
     return await this.prisma.user.findMany();
@@ -16,67 +20,88 @@ export class UserService {
   async findByID(id: number): Promise<User | null> {
     return await this.prisma.user.findUnique({
       where: {
-        idUser: id
+        idUser: id,
+      },
+      include: {
+        credential: true,
+      },
+    });
+  }
+
+  async findByCode(code: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        credential: {
+          code
+        },
       },
       include: {
         credential: true
       }
     });
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
   }
 
-  async findByCode(code: string) {
-    const credential = await this.prisma.credential.findFirst({
+  async findById(id: number) {
+
+    const user = await this.prisma.user.findUnique({
       where: {
-        code: code
+        idUser: id,
+      },
+      include: {
+        credential: true,
       }
     });
 
-    if (!credential) { 
-      return null; 
+    if (!user) {
+      throw new NotFoundException("User not found")
     }
 
-    return { credential };
+    return user;
   }
 
   async createUser(createUserDto: CreateUserDto) {
-
     // const { email, name, p_surname, m_surname, status, credential } = createUserDto;
     // return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
 
     try {
-
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto) //Prueba de consola
+      console.log(createUserDto); //Prueba de consola
 
       if (credential.password === null) {
-        const temporaryPassword = await this.credentialService.generateTemporaryPassword(8);
+        const temporaryPassword =
+          await this.credentialService.generateTemporaryPassword(8);
         credential.password = temporaryPassword;
-        credential.repPassword = temporaryPassword
+        credential.repPassword = temporaryPassword;
+      } else {
+        credential.password = await this.hashingService.hash(credential.password)
+        credential.repPassword = credential.password
       }
 
-
       return this.prisma.user.create({
-          data: {
-              name,
-              p_surname,
-              m_surname,
-              status,
-              credential: {
-                  create: {
-                    code: credential.code,
-                    email: credential.email,
-                    password: credential.password,
-                    repPassword: credential.repPassword,
-                  }
-              }
-          }
-      }); 
+        data: {
+          name,
+          p_surname,
+          m_surname,
+          status,
+          credential: {
+            create: {
+              code: credential.code,
+              email: credential.email,
+              password: credential.password,
+              repPassword: credential.repPassword,
+            },
+          },
+        },
+      });
     } catch (error) {
       console.error(error);
       throw new Error('Error creating user');
     }
   }
-
-  
-
 }

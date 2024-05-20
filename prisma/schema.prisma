@@ -59,6 +59,7 @@ model Credential {
   email        String? @unique
   password     String
   repPassword  String
+  tokenId      String?
 
   //Relations
   user             User?

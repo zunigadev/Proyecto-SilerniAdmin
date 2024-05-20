@@ -19,14 +19,16 @@ code?: string  | null;
 email?: string  | null;
 @ApiProperty({
   type: 'string',
-  required: false,
-  nullable: true,
 })
-password?: string  | null;
+password: string ;
+@ApiProperty({
+  type: 'string',
+})
+repPassword: string ;
 @ApiProperty({
   type: 'string',
   required: false,
   nullable: true,
 })
-repPassword?: string  | null;
+tokenId?: string  | null;
 }
