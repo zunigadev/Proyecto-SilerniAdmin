@@ -60,6 +60,7 @@ model Role {
   id          Int              @id @default(autoincrement())
   name        String           @unique
   description String
+  enabled     Boolean          @default(true)
   users       UserRole[]
   permissions RolePermission[]
 }

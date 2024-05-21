@@ -16,4 +16,8 @@ name: string ;
   type: 'string',
 })
 description: string ;
+@ApiProperty({
+  type: 'boolean',
+})
+enabled: boolean ;
 }

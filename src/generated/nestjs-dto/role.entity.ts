@@ -19,6 +19,10 @@ name: string ;
 })
 description: string ;
 @ApiProperty({
+  type: 'boolean',
+})
+enabled: boolean ;
+@ApiProperty({
   isArray: true,
   required: false,
 })

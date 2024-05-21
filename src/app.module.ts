@@ -9,6 +9,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
 import { IamModule } from './iam/iam.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionModule } from './permission/permission.module';
+import { MenuModule } from './menu/menu.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { IamModule } from './iam/iam.module';
     ApplicationModule,
     CredentialModule,
     SequenceCounterModule,
+    RolesModule,
+    PermissionModule,
+    MenuModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],

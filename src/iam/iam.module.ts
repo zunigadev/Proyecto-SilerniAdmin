@@ -7,6 +7,7 @@ import { UserModule } from "src/user/user.module";
 import { AuthController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
 import { RefreshTokenIdsStorage } from "./auth/refresh-token-ids-storage";
+import { AuthorizationService } from './authorization/authorization.service';
 import jwtConfig from "./config/jwt.config";
 
 @Module({
@@ -20,6 +21,7 @@ import jwtConfig from "./config/jwt.config";
   providers: [
     RefreshTokenIdsStorage,
     AuthService,
+    AuthorizationService,
   ],
   controllers: [AuthController],
 })
