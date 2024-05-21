@@ -12,11 +12,13 @@ import { IamModule } from './iam/iam.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionModule } from './permission/permission.module';
 import { MenuModule } from './menu/menu.module';
+import { CaslModule } from './casl/casl.module';
+import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
     PrismaModule,
-    IamModule,
+    CaslModule,
     UserModule,
     ApplicationModule,
     CredentialModule,
@@ -24,6 +26,8 @@ import { MenuModule } from './menu/menu.module';
     RolesModule,
     PermissionModule,
     MenuModule,
+    IamModule,
+    TestModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
