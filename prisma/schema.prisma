@@ -51,6 +51,70 @@ model User {
   //Relations
   credential   Credential @relation(fields: [credentialId], references: [idCredential])
   credentialId Int        @unique
+
+  roles       UserRole[]
+  permissions UserPermission[]
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String
+  enabled     Boolean          @default(true)
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id       Int              @id @default(autoincrement())
+  effect   Boolean // true: allowed; false: deny
+  name     String
+  resource String
+  action   String
+  menus    Menu[]
+  roles    RolePermission[]
+  users    UserPermission[]
+}
+
+model Menu {
+  id          Int          @id @default(autoincrement())
+  name        String
+  icon        String?
+  link        String?
+  parentId    Int?         @default(-1)
+  parent      Menu?        @relation("Submenus", fields: [parentId], references: [id])
+  submenus    Menu[]       @relation("Submenus")
+  permissions Permission[]
+}
+
+model UserRole {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [idUser])
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model UserPermission {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  permissionId Int
+  user         User       @relation(fields: [userId], references: [idUser])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([userId, permissionId])
 }
 
 model Credential {

@@ -1,16 +1,20 @@
 
 import {ApiProperty} from '@nestjs/swagger'
-import {Credential} from './credential.entity'
-import {UserRole} from './userRole.entity'
+import {Menu} from './menu.entity'
+import {RolePermission} from './rolePermission.entity'
 import {UserPermission} from './userPermission.entity'
 
 
-export class User {
+export class Permission {
   @ApiProperty({
   type: 'integer',
   format: 'int32',
 })
-idUser: number ;
+id: number ;
+@ApiProperty({
+  type: 'boolean',
+})
+effect: boolean ;
 @ApiProperty({
   type: 'string',
 })
@@ -18,32 +22,24 @@ name: string ;
 @ApiProperty({
   type: 'string',
 })
-p_surname: string ;
+resource: string ;
 @ApiProperty({
   type: 'string',
 })
-m_surname: string ;
-@ApiProperty({
-  type: 'string',
-})
-status: string ;
-@ApiProperty({
-  required: false,
-})
-credential?: Credential ;
-@ApiProperty({
-  type: 'integer',
-  format: 'int32',
-})
-credentialId: number ;
+action: string ;
 @ApiProperty({
   isArray: true,
   required: false,
 })
-roles?: UserRole[] ;
+menus?: Menu[] ;
 @ApiProperty({
   isArray: true,
   required: false,
 })
-permissions?: UserPermission[] ;
+roles?: RolePermission[] ;
+@ApiProperty({
+  isArray: true,
+  required: false,
+})
+users?: UserPermission[] ;
 }
