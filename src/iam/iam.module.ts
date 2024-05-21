@@ -14,6 +14,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { AuthenticationGuard } from "./auth/guards/authentication.guard";
 import { PoliciesGuard } from "./authorization/guards/policies.guard";
 import { AccessTokenGuard } from "./auth/guards/access-token.guard";
+import { LoginAttemptModule } from "src/login-attempt/login-attempt.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AccessTokenGuard } from "./auth/guards/access-token.guard";
     UserModule,
     HashingModule,
     CaslModule,
+    LoginAttemptModule,
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
   ],

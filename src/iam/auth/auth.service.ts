@@ -12,6 +12,7 @@ import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.e
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
 import { HashingService } from 'src/hashing/hashing.service';
 import { User } from 'src/generated/nestjs-dto/user.entity';
+import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
 
 @Injectable()
 export class AuthService {
@@ -22,28 +23,50 @@ export class AuthService {
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
+    private readonly loginAttemptService: LoginAttemptService,
   ) { }
 
   async logIn(loginDto: LoginAuthDto) {
-    const { code, password } = loginDto;
 
-    const user = await this.userService.findByCode(code);
+    let user = null;
+    try {
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid code');
+      const { code, password } = loginDto;
+
+      user = await this.userService.findByCode(code);
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid code');
+      }
+      console.log(code); // Prueba de consola
+      const userpassword = user.credential.password;
+      const isPasswordValid = await this.hashingService.compare(password, userpassword);
+
+      console.log(password, userpassword); // Prueba de consola
+      console.log(isPasswordValid); // Prueba de consola
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid password');
+      }
+
+      await this.loginAttemptService.logLoginAttempt(user.idUser, {
+        username: user.name,
+        success: true,
+        ipAddress: loginDto.ip,
+        userAgent: loginDto.userAgent,
+      });
+
+      const tokens = await this.generateTokens(user);
+      return tokens
+    } catch (error) {
+      await this.loginAttemptService.logLoginAttempt(user.idUser, {
+        username: user.name,
+        success: false,
+        ipAddress: loginDto.ip,
+        userAgent: loginDto.userAgent,
+      });
+      throw error
     }
-    console.log(code); // Prueba de consola
-    const userpassword = user.credential.password;
-    const isPasswordValid = await this.hashingService.compare(password, userpassword);
-
-    console.log(password, userpassword); // Prueba de consola
-    console.log(isPasswordValid); // Prueba de consola
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
-
-    return await this.generateTokens(user);
   }
 
   async register(registerDto: RegisterUserDto) {

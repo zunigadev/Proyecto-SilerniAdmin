@@ -52,8 +52,21 @@ model User {
   credential   Credential @relation(fields: [credentialId], references: [idCredential])
   credentialId Int        @unique
 
-  roles       UserRole[]
-  permissions UserPermission[]
+  roles         UserRole[]
+  permissions   UserPermission[]
+  loginAttempts LoginAttempt[]
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  username  String
+  timestamp DateTime @default(now())
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+
+  user User? @relation(fields: [userId], references: [idUser])
 }
 
 model Role {

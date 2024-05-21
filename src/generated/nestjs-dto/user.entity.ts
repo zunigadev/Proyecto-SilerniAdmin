@@ -3,6 +3,7 @@ import {ApiProperty} from '@nestjs/swagger'
 import {Credential} from './credential.entity'
 import {UserRole} from './userRole.entity'
 import {UserPermission} from './userPermission.entity'
+import {LoginAttempt} from './loginAttempt.entity'
 
 
 export class User {
@@ -46,4 +47,9 @@ roles?: UserRole[] ;
   required: false,
 })
 permissions?: UserPermission[] ;
+@ApiProperty({
+  isArray: true,
+  required: false,
+})
+loginAttempts?: LoginAttempt[] ;
 }

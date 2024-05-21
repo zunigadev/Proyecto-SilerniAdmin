@@ -8,4 +8,7 @@ export class LoginAuthDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   password: string;
+
+  ip?: string = null;
+  userAgent?: string = null;
 }

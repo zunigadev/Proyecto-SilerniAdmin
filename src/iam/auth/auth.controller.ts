@@ -1,20 +1,25 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LoginAuthDto } from './dto/login-auth.dto';
-import { RegisterUserDto } from './dto/register-auth.dto';
-import { Auth } from './decorators/auth.decorator';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthType } from 'src/common/enums/auth-type.enum';
+import { AuthService } from './auth.service';
+import { Auth } from './decorators/auth.decorator';
+import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterUserDto } from './dto/register-auth.dto';
 
 @Auth(AuthType.None)
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+  ) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  logIn(@Body() loginDto: LoginAuthDto) {
-    return this.authService.logIn(loginDto);
+  async logIn(@Req() req: Request, @Body() loginDto: LoginAuthDto) {
+    loginDto.ip = req.ip;
+    loginDto.userAgent = req.headers['user-agent'];
+    return await this.authService.logIn(loginDto);
   }
 
   // Pruebas

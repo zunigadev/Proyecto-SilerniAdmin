@@ -14,6 +14,7 @@ import { PermissionModule } from './permission/permission.module';
 import { MenuModule } from './menu/menu.module';
 import { CaslModule } from './casl/casl.module';
 import { TestModule } from './test/test.module';
+import { LoginAttemptModule } from './login-attempt/login-attempt.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TestModule } from './test/test.module';
     MenuModule,
     IamModule,
     TestModule,
+    LoginAttemptModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
