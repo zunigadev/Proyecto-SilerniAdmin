@@ -10,11 +10,16 @@ import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
 import { RoleModule } from './role/role.module';
 import { IamModule } from './iam/iam.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionModule } from './permission/permission.module';
+import { MenuModule } from './menu/menu.module';
+import { CaslModule } from './casl/casl.module';
+import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
     PrismaModule,
-    IamModule,
+    CaslModule,
     UserModule,
     ApplicationModule,
    
@@ -23,8 +28,11 @@ import { IamModule } from './iam/iam.module';
    
    
     SequenceCounterModule,
-    RoleModule,
-    RoleModule,
+    RolesModule,
+    PermissionModule,
+    MenuModule,
+    IamModule,
+    TestModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
