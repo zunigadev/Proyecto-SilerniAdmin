@@ -9,17 +9,30 @@ import { CredentialService } from 'src/credential/credential.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { TutorService } from 'src/tutor/tutor.service';
+import { CreateTutorDto } from './dto/create-tutor.dto';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly credentialService: CredentialService
+    private readonly credentialService: CredentialService,
+    private tutorService: TutorService
   ) {}
 
-  async findByID() {
-    return await this.prisma.user.findMany();
+  async findByID(id: number) {
+    return await this.prisma.postulationChild.findUnique({
+      where: {
+        idPostulationChild: id,
+      },
+    });
   }
+
+  // async createTutor(createTutor: CreateTutorDto) {
+    
+  //   const tutor = await
+  // }
+  
 
   async createApplication(dataTutor: CreateDataTutorDto) {
     try {
@@ -90,7 +103,7 @@ export class ApplicationService {
         }
 
         if (postulationChild.status !== StatusApplication.PENDING) {
-          throw new ConflictException('Application is not pending');
+          throw new ConflictException('Application in pending');
         }
 
         // Crear credenciales para estudiante y tutor (si es necesario)
@@ -114,6 +127,11 @@ export class ApplicationService {
             where: { idPostulationChild: id },
             data: {
               status: statusApplication.status,
+              reasons: {
+                create: statusApplication.argument ? {
+                  argument: statusApplication.argument,
+                } : undefined,
+              }
             },
           });
         }

@@ -140,7 +140,7 @@ model DataTutor {
   document     String? @map("document")
   phone        String? @map("phone")
   relationship String? @map("relationship")
-  email        String? @map("email")
+  email        String? @map("email") //Revisar
   gender       String? @map("gender")
 
   // Define the reverse relationship with PostulationChild
@@ -163,21 +163,37 @@ model PostulationChild {
   email                String? @map("email")
   address              String? @map("address")
   gender               String? @map("gender")
-  justification        String? @map("justification")
   grade                String? @map("grade")
-  postulationChildCol  String? @map("PostulationChildcol")
   level                String? @map("level")
   dataTutorIdDataTutor Int     @map("DataTutor_idDataTutor")
   status               String  @default("sending") @map("postulationStatus")
 
   // Define the relationship with DataTutor
   dataTutor         DataTutor          @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
+
+  // Define the relationship with FilePostulation
   filesPostulations FilesPostulation[]
 
+  // Define the relationship with  Credential
   credential   Credential? @relation(fields: [credentialId], references: [idCredential])
   credentialId Int?        @unique
 
+  // Define the relationship with Reason
+  reasons        Reason[] 
+
   @@map("PostulationChild")
+}
+
+// Reason for rejection
+model Reason {
+  idReason          Int     @id @default(autoincrement())
+  argument          String
+
+  // Define the relationship with PostulationChild
+  postulationChild PostulationChild? @relation(fields: [postulationChildId], references: [idPostulationChild])
+  postulationChildId Int?
+
+  @@map("Reason")
 }
 
 // Define the FilesPostulation table

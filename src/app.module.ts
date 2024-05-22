@@ -8,13 +8,13 @@ import { ApplicationController } from './application/application.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { CredentialModule } from './credential/credential.module';
 import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
-import { RoleModule } from './role/role.module';
 import { IamModule } from './iam/iam.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionModule } from './permission/permission.module';
 import { MenuModule } from './menu/menu.module';
 import { CaslModule } from './casl/casl.module';
 import { TestModule } from './test/test.module';
+import { TutorModule } from './tutor/tutor.module';
 
 @Module({
   imports: [
@@ -22,17 +22,14 @@ import { TestModule } from './test/test.module';
     CaslModule,
     UserModule,
     ApplicationModule,
-   
-   
     CredentialModule,
-   
-   
     SequenceCounterModule,
     RolesModule,
     PermissionModule,
     MenuModule,
     IamModule,
     TestModule,
+    TutorModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],

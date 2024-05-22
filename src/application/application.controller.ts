@@ -21,7 +21,7 @@ export class ApplicationController {
   @Get(':id')
   getByID(@Param('id', ParseIntPipe) id: number) {
     console.log(id); //Prueba de consola
-    return this.applicationService.findByID();
+    return this.applicationService.findByID(id);
   }
 
   @Post()
@@ -37,6 +37,11 @@ export class ApplicationController {
     const dataTutor: CreateDataTutorDto = JSON.parse(data.body);
 
     return this.applicationService.createApplication(dataTutor);
+  }
+
+  @Post('/prueba')
+  async createTutor(@Body() mensaje:string){
+    // return this.applicationService.createTutor(mensaje)
   }
 
   @Patch(':id')

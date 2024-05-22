@@ -66,12 +66,8 @@ export class UserService {
   }
 
   async createUser(createUserDto: CreateUserDto) {
-    // const { email, name, p_surname, m_surname, status, credential } = createUserDto;
-    // return await this.prisma.dataTutor.create({data: {...dataTutorToSave, postulationChild: {create:postulationsToSave}}})
-
     try {
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto); //Prueba de consola
 
       if (credential.password === null) {
         const temporaryPassword =
