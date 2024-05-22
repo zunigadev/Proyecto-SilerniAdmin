@@ -14,6 +14,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
+import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -116,6 +117,19 @@ export class AuthService {
     return emailToken
   }
 
+  async requestNewEmailToken(requestNewEmailTokenDto: RequestNewEmailTokenDto) {
+    const { email } = requestNewEmailTokenDto;
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('User with this email does not exist');
+    }
+    if (user.credential.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    return this.generateTokenToValidateEmail(user);
+  }
+
   async verifyEmailToken(emailTokenDto: EmailTokenDto) {
     try {
       const { sub, emailTokenId } = await this.jwtService.verifyAsync<
@@ -127,7 +141,7 @@ export class AuthService {
       });
       const user = await this.userService.findById(sub);
 
-      if (user.credential.verifyEmail) {
+      if (user.credential.emailVerified) {
         throw new PreconditionFailedException("Email already verified");
       }
 

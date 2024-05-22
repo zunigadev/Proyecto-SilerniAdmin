@@ -21,7 +21,7 @@ email: string  | null;
 @ApiProperty({
   type: 'boolean',
 })
-verifyEmail: boolean ;
+emailVerified: boolean ;
 @ApiProperty({
   type: 'string',
 })

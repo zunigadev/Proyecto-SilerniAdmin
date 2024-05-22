@@ -47,6 +47,25 @@ export class UserService {
     return user;
   }
 
+  async findByEmail(email: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        credential: {
+          email
+        },
+      },
+      include: {
+        credential: true
+      }
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  }
+
   async findById(id: number) {
 
     const user = await this.prisma.user.findUnique({
@@ -109,7 +128,7 @@ export class UserService {
 
     await this.prisma.credential.update({
       data: {
-        verifyEmail: true
+        emailVerified: true
       },
       where: {
         idCredential: credentialId,

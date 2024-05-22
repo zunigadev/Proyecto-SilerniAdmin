@@ -7,6 +7,7 @@ import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { EmailTokenDto } from './dto/email-token.dto';
+import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
 
 @Auth(AuthType.None)
 @Controller('auth')
@@ -39,6 +40,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   verifyEmailToken(@Body() emailTokenDto: EmailTokenDto) {
     return this.authService.verifyEmailToken(emailTokenDto);
+  }
+
+  @Post('request-new-email-token')
+  @HttpCode(HttpStatus.OK)
+  requestNewEmailToken(@Body() requestNewEmailTokenDto: RequestNewEmailTokenDto) {
+    return this.authService.requestNewEmailToken(requestNewEmailTokenDto);
   }
 
 }
