@@ -104,4 +104,16 @@ export class UserService {
       throw new Error('Error creating user');
     }
   }
+
+  async verifyEmail(credentialId: number): Promise<any> {
+
+    await this.prisma.credential.update({
+      data: {
+        verifyEmail: true
+      },
+      where: {
+        idCredential: credentialId,
+      }
+    })
+  }
 }

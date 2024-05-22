@@ -19,6 +19,10 @@ code: string  | null;
 })
 email: string  | null;
 @ApiProperty({
+  type: 'boolean',
+})
+verifyEmail: boolean ;
+@ApiProperty({
   type: 'string',
 })
 password: string ;

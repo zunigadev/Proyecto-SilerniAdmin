@@ -17,9 +17,6 @@ export class PoliciesGuard implements CanActivate {
     const policyHandlers =
       this.reflector.get<PolicyHandler[]>(CHECK_POLICIES_KEY, context.getHandler()) || [];
 
-    console.log({ policyHandlers });
-
-
     if (!policyHandlers || policyHandlers.length === 0) {
       return true;
     }

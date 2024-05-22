@@ -6,6 +6,7 @@ import { Auth } from './decorators/auth.decorator';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
+import { EmailTokenDto } from './dto/email-token.dto';
 
 @Auth(AuthType.None)
 @Controller('auth')
@@ -32,6 +33,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refreshTokens(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshTokens(refreshTokenDto);
+  }
+
+  @Post("verify-email")
+  @HttpCode(HttpStatus.OK)
+  verifyEmailToken(@Body() emailTokenDto: EmailTokenDto) {
+    return this.authService.verifyEmailToken(emailTokenDto);
   }
 
 }

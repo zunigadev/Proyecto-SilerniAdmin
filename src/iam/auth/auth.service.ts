@@ -1,18 +1,19 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, PreconditionFailedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
+import { User } from 'src/generated/nestjs-dto/user.entity';
+import { HashingService } from 'src/hashing/hashing.service';
+import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
+import { EmailTokenDto } from './dto/email-token.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
-import { HashingService } from 'src/hashing/hashing.service';
-import { User } from 'src/generated/nestjs-dto/user.entity';
-import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
 
 @Injectable()
 export class AuthService {
@@ -77,7 +78,9 @@ export class AuthService {
     // registerDto.credential.password = passwordHash;
     // registerDto = {...registerDto,credential:{email, code/*, password:passwordHash,repPassword:passwordHash}*/}
 
-    return this.userService.createUser(registerDto);
+    const newUser = await this.userService.createUser(registerDto);
+
+    return this.generateTokenToValidateEmail(newUser);
   }
 
   async generateTokens(user: User) {
@@ -103,6 +106,54 @@ export class AuthService {
     };
   }
 
+  async generateTokenToValidateEmail(user: User) {
+    const emailTokenId = randomUUID();
+    const emailToken = await this.signToken(user.idUser, this.jwtConfiguration.emailTokenTtl, {
+      emailTokenId
+    })
+    await this.refreshTokenIdsStorage.insert(user.idUser, emailTokenId);
+
+    return emailToken
+  }
+
+  async verifyEmailToken(emailTokenDto: EmailTokenDto) {
+    try {
+      const { sub, emailTokenId } = await this.jwtService.verifyAsync<
+        Pick<ActiveUserData, "sub"> & { emailTokenId: string }
+      >(emailTokenDto.emailToken, {
+        secret: this.jwtConfiguration.secret,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      });
+      const user = await this.userService.findById(sub);
+
+      if (user.credential.verifyEmail) {
+        throw new PreconditionFailedException("Email already verified");
+      }
+
+      const isValid = await this.refreshTokenIdsStorage.validate(
+        user.idUser,
+        emailTokenId,
+      );
+      if (isValid) {
+        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential);
+
+        await this.userService.verifyEmail(user.credential.idCredential);
+
+      } else {
+        throw new BadRequestException("Email Token is invalid");
+      }
+      return {
+        success: true,
+      }
+    } catch (err) {
+      if (err instanceof InvalidateRefreshTokenError) {
+        throw new UnauthorizedException("Access denied");
+      }
+      throw err
+    }
+  }
+
   async refreshTokens(refreshTokenDto: RefreshTokenDto) {
     try {
       const { sub, refreshTokenId } = await this.jwtService.verifyAsync<
@@ -119,7 +170,7 @@ export class AuthService {
         refreshTokenId,
       );
       if (isValid) {
-        await this.refreshTokenIdsStorage.invalidate(user.idUser);
+        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential);
       } else {
         throw new Error("Refresh Token is invalid");
       }

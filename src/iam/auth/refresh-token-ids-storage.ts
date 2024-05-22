@@ -50,23 +50,15 @@ export class RefreshTokenIdsStorage {
         return credential.tokenId === tokenId;
     }
 
-    async invalidate(userId: number): Promise<void> {
+    async invalidate(credentialId: number): Promise<void> {
         // await this.redisClient.del(this.getKey(userId));
-        const user = await this.prismaService.user.findUnique({
-            where: {
-                idUser: userId
-            },
-            include: {
-                credential: true,
-            }
-        })
 
         await this.prismaService.credential.update({
             data: {
                 tokenId: null
             },
             where: {
-                idCredential: user.credential.idCredential,
+                idCredential: credentialId,
             }
         })
     }
