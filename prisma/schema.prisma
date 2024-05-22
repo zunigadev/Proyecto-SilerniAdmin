@@ -81,7 +81,7 @@ model Role {
 model Permission {
   id       Int              @id @default(autoincrement())
   effect   Boolean // true: allowed; false: deny
-  name     String
+  name     String           @unique
   resource String
   action   String
   menus    Menu[]

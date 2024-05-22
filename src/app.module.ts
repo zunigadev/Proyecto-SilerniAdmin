@@ -19,13 +19,13 @@ import { LoginAttemptModule } from './login-attempt/login-attempt.module';
 @Module({
   imports: [
     PrismaModule,
+    PermissionModule,
     CaslModule,
     UserModule,
     ApplicationModule,
     CredentialModule,
     SequenceCounterModule,
     RolesModule,
-    PermissionModule,
     MenuModule,
     IamModule,
     TestModule,
