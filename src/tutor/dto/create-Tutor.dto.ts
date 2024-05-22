@@ -1,7 +1,7 @@
 import {ApiProperty} from '@nestjs/swagger'
 
 
-export class CreateDataTutorDto {
+export class CreateTutorDto {
   @ApiProperty({
   type: 'string',
   required: false,

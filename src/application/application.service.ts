@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -28,10 +29,16 @@ export class ApplicationService {
     });
   }
 
-  // async createTutor(createTutor: CreateTutorDto) {
+  async createTutor(createTutor: CreateTutorDto) {
     
-  //   const tutor = await
-  // }
+    const tutor = await this.tutorService.findByEmail(createTutor.email)
+
+    if(tutor) {
+      throw new BadRequestException('Tutor alredy exists');
+    }
+
+    return this.tutorService.create(createTutor)
+  }
   
 
   async createApplication(dataTutor: CreateDataTutorDto) {

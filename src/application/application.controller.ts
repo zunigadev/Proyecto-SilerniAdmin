@@ -39,9 +39,13 @@ export class ApplicationController {
     return this.applicationService.createApplication(dataTutor);
   }
 
-  @Post('/prueba')
-  async createTutor(@Body() mensaje:string){
-    // return this.applicationService.createTutor(mensaje)
+  @Post('tutor')
+  async createTutor(@Body() createTutorDto: CreateDataTutorDto){
+    try{
+      return await this.applicationService.createTutor(createTutorDto)
+    }catch(error){
+
+    }
   }
 
   @Patch(':id')

@@ -1,24 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateTutorDto } from './dto/create-Tutor.dto';
 
 @Injectable()
 export class TutorService {
     constructor(
-        private prisma: PrismaService,
+        private prisma: PrismaService
       ) { }
 
 
     async findByEmail(email: string) {
-        return this.prisma.credential.findUnique({
+        return this.prisma.dataTutor.findFirst({
             where: {
-                email: email,
+                email: {equals: email}
             }
         })
     }
 
-    async create(mensaje: string) {
+    async create(createTutor: CreateTutorDto) {
         try{
-            await console.log(mensaje)
+            return this.prisma.dataTutor.create({data:createTutor})
         }catch(error){
             console.error(error);
             throw new Error('Error creating user');
