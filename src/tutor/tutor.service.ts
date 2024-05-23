@@ -1,27 +1,32 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
+import { CredentialService } from 'src/credential/credential.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTutorDto } from './dto/create-Tutor.dto';
-import { PrismaClient } from '@prisma/client';
-import { CredentialService } from 'src/credential/credential.service';
 
 @Injectable()
-export class TutorService {
+export class TutorService extends BaseService {
     constructor(
-        private prisma: PrismaService,
+        protected prisma: PrismaService,
         private readonly credentialService: CredentialService,
-    ) { }
+    ) {
+        super(prisma)
+    }
 
 
-    async findByEmail(email: string) {
-        return this.prisma.dataTutor.findFirst({
+    async findByEmail(email: string, context?: TransactionContext) {
+        const prisma = this.getPrismaClient(context)
+        return prisma.dataTutor.findFirst({
             where: {
                 email: { equals: email }
             }
         })
     }
 
-    async findCredential(idDataTutor: number) {
-        return this.prisma.dataTutor.findUnique({
+    async findCredential(idDataTutor: number, context?: TransactionContext) {
+        const prisma = this.getPrismaClient(context)
+        return prisma.dataTutor.findUnique({
             where: { idDataTutor: idDataTutor },
             select: {
                 idDataTutor: true,
@@ -32,42 +37,16 @@ export class TutorService {
     }
 
 
-    async create(createTutor: CreateTutorDto) {
+    async create(createTutor: CreateTutorDto, context?: TransactionContext) {
+        const prisma = this.getPrismaClient(context)
         try {
-            return this.prisma.dataTutor.create({ data: createTutor })
+
+            return prisma.dataTutor.create({ data: createTutor })
         } catch (error) {
             console.error(error);
-            throw new Error('Error creating user');
+            throw new ConflictException('Error creating user');
         }
     }
-
-    // async createCredentialsAndLinkToTutor(
-    //     prisma: PrismaClient,
-    //     idDataTutor: number
-    // ) {
-
-    //     const dataTutor = await this.findCredential(idDataTutor)
-
-    //     if (!dataTutor) {
-    //         throw new NotFoundException('Tutor not found');
-    //     }
-
-    //     if (dataTutor.credential) {
-    //         throw new ConflictException('Tutor already has credentials');
-    //     }
-
-    //     const tutorCredential = await this.credentialService.generateCredentialsToTutor(dataTutor.email);
-
-    //     // Vincular credenciales al tutor
-    //     await prisma.dataTutor.update({
-    //         where: { idDataTutor: dataTutor.idDataTutor },
-    //         data: {
-    //             credential: {
-    //                 connect: tutorCredential,
-    //             },
-    //         },
-    //     });
-    // }
 
 
 }

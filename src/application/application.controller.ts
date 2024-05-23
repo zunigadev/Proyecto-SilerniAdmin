@@ -1,21 +1,17 @@
 import {
-  BadRequestException,
   Body,
-  ConflictException,
   Controller,
   Get,
   Param,
   ParseIntPipe,
   Patch,
-  Post,
-  UploadedFiles,
-  UseInterceptors,
+  Post
 } from '@nestjs/common';
+import { AuthType } from 'src/common/enums/auth-type.enum';
+import { Auth } from 'src/iam/auth/decorators/auth.decorator';
 import { ApplicationService } from './application.service';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
-import { UpdateStatusChildDto } from './dto/update-status.dto';
 import { CreateTutorDto } from './dto/create-tutor.dto';
+import { UpdateStatusChildDto } from './dto/update-status.dto';
 
 @Controller('application')
 export class ApplicationController {
@@ -27,32 +23,26 @@ export class ApplicationController {
     return this.applicationService.findByID(id);
   }
 
-  @Post()
-  @UseInterceptors(FilesInterceptor('files'))
-  async uploadFiles(
-    @Body() data: any,
-    @UploadedFiles() files: Express.Multer.File[]
-  ) {
-    //Verificar tipo de dato any
-    if (!files || files.length === 0) {
-      throw new BadRequestException('No files uploaded');
-    }
-    const dataTutor: CreateDataTutorDto = JSON.parse(data.body);
-
-    return this.applicationService.createApplication(dataTutor);
-  }
+  /*   @Post()
+    @UseInterceptors(FilesInterceptor('files'))
+    async uploadFiles(
+      @Body() data: any,
+      @UploadedFiles() files: Express.Multer.File[]
+    ) {
+      //Verificar tipo de dato any
+      if (!files || files.length === 0) {
+        throw new BadRequestException('No files uploaded');
+      }
+      const dataTutor: CreateDataTutorDto = JSON.parse(data.body);
+  
+      return this.applicationService.createApplication(dataTutor);
+    } */
 
   @Post('tutor')
+  @Auth(AuthType.None)
   async createTutor(@Body() createTutorDto: CreateTutorDto) {
-      try {
-          await this.applicationService.createTutor(createTutorDto);
-          return 'Tutor creado exitosamente';
-      } catch (error) {
-          if (error instanceof ConflictException) {
-              throw new ConflictException('El correo electrónico ya está registrado');
-          }
-          throw error;
-      }
+    return await this.applicationService.txCreateTutor(createTutorDto);
+
   }
 
   @Patch(':id')
@@ -70,4 +60,4 @@ export class ApplicationController {
 
 
 
-   
+

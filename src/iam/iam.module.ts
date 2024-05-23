@@ -14,11 +14,13 @@ import { AuthenticationGuard } from "./auth/guards/authentication.guard";
 import { RefreshTokenIdsStorage } from "./auth/refresh-token-ids-storage";
 import { PoliciesGuard } from "./authorization/guards/policies.guard";
 import jwtConfig from "./config/jwt.config";
+import { CredentialModule } from "src/credential/credential.module";
 
 @Module({
   imports: [
     PrismaModule,
     UserModule,
+    CredentialModule,
     HashingModule,
     CaslModule,
     LoginAttemptModule,
@@ -39,5 +41,6 @@ import jwtConfig from "./config/jwt.config";
     AccessTokenGuard,
   ],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class IamModule { }

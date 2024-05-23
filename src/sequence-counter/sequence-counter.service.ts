@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class SequenceCounterService {
-  constructor(private prisma: PrismaService) {}
+export class SequenceCounterService extends BaseService {
+  constructor(
+    protected readonly prisma: PrismaService
+  ) {
+    super(prisma)
+  }
 
-  async nextVal(prisma: PrismaClient, sequenceName: string): Promise<number> {
+  async nextVal(sequenceName: string, txContext: TransactionContext): Promise<number> {
+    const prisma = this.getPrismaClient(txContext)
+
     const counter = await prisma.sequenceCounter.findUnique({
       where: { name: sequenceName },
     });

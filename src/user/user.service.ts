@@ -1,24 +1,33 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
 import { CredentialService } from 'src/credential/credential.service';
+import { HashingService } from 'src/hashing/hashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { HashingService } from 'src/hashing/hashing.service';
+import { BaseService } from 'src/common/services/base.service';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseService {
   constructor(
-    private prisma: PrismaService,
+    protected prisma: PrismaService,
     private readonly credentialService: CredentialService,
     private readonly hashingService: HashingService,
-  ) { }
-
-  async findAll(): Promise<User[]> {
-    return await this.prisma.user.findMany();
+  ) {
+    super(prisma)
   }
 
-  async findByID(id: number): Promise<User | null> {
-    return await this.prisma.user.findUnique({
+  async findAll(txContext?: TransactionContext): Promise<User[]> {
+    const prisma = this.getPrismaClient(txContext)
+
+    return await prisma.user.findMany();
+  }
+
+  async findByID(id: number, txContext?: TransactionContext): Promise<User | null> {
+
+    const prisma = this.getPrismaClient(txContext)
+
+    return await prisma.user.findUnique({
       where: {
         idUser: id,
       },
@@ -28,8 +37,10 @@ export class UserService {
     });
   }
 
-  async findByCode(code: string) {
-    const user = await this.prisma.user.findFirst({
+  async findByCode(code: string, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    const user = await prisma.user.findFirst({
       where: {
         credential: {
           code
@@ -47,8 +58,10 @@ export class UserService {
     return user;
   }
 
-  async findByEmail(email: string) {
-    const user = await this.prisma.user.findFirst({
+  async findByEmail(email: string, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    const user = await prisma.user.findFirst({
       where: {
         credential: {
           email
@@ -66,9 +79,10 @@ export class UserService {
     return user;
   }
 
-  async findById(id: number) {
+  async findById(id: number, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
 
-    const user = await this.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         idUser: id,
       },
@@ -84,11 +98,13 @@ export class UserService {
     return user;
   }
 
-  async createUser(createUserDto: CreateUserDto) {
+  async createUser(createUserDto: CreateUserDto, txContext?: TransactionContext) {
     try {
+      const prisma = this.getPrismaClient(txContext)
       const { name, p_surname, m_surname, status, credential } = createUserDto;
+      console.log(createUserDto);
 
-      if (credential.password === null) {
+      if (!credential.password) {
         const temporaryPassword =
           await this.credentialService.generateTemporaryPassword(8);
         credential.password = temporaryPassword;
@@ -98,7 +114,7 @@ export class UserService {
         credential.repPassword = credential.password
       }
 
-      return this.prisma.user.create({
+      return prisma.user.create({
         data: {
           name,
           p_surname,
@@ -120,9 +136,11 @@ export class UserService {
     }
   }
 
-  async verifyEmail(credentialId: number): Promise<any> {
+  async verifyEmail(credentialId: number, txContext?: TransactionContext): Promise<any> {
 
-    await this.prisma.credential.update({
+    const prisma = this.getPrismaClient(txContext)
+
+    await prisma.credential.update({
       data: {
         emailVerified: true
       },
