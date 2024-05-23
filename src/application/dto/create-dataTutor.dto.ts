@@ -51,5 +51,5 @@ export class CreateDataTutorDto {
   })
   gender?: string | null;
 
-  postulationChildren: CreatePostulationChildDto[];
+  postulationChildren?: CreatePostulationChildDto[];
 }
