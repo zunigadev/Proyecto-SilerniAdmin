@@ -8,4 +8,9 @@ export class UpdateStatusChildDto {
     default: 'sending',
   })
   status: string | null = 'sending';
+
+  @ApiProperty({
+    type: 'string',
+  })
+  argument: string ;
 }

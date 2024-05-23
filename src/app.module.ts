@@ -14,20 +14,24 @@ import { PermissionModule } from './permission/permission.module';
 import { MenuModule } from './menu/menu.module';
 import { CaslModule } from './casl/casl.module';
 import { TestModule } from './test/test.module';
+import { TutorModule } from './tutor/tutor.module';
+import { LoginAttemptModule } from './login-attempt/login-attempt.module';
 
 @Module({
   imports: [
     PrismaModule,
+    PermissionModule,
     CaslModule,
     UserModule,
     ApplicationModule,
     CredentialModule,
     SequenceCounterModule,
     RolesModule,
-    PermissionModule,
     MenuModule,
     IamModule,
     TestModule,
+    LoginAttemptModule,
+    TutorModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],

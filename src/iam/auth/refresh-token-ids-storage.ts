@@ -3,18 +3,24 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { InvalidateRefreshTokenError } from "./errors/invalidate-refresh-token.error";
+import { BaseService } from "src/common/services/base.service";
+import { TransactionContext } from "src/common/contexts/transaction.context";
 
 @Injectable()
-export class RefreshTokenIdsStorage {
+export class RefreshTokenIdsStorage extends BaseService {
 
     constructor(
-        private readonly prismaService: PrismaService,
-    ) { }
+        protected readonly prismaService: PrismaService,
+    ) {
+        super(prismaService)
+    }
 
-    async insert(userId: number, tokenId: string): Promise<void> {
+    async insert(userId: number, tokenId: string, txContext?: TransactionContext): Promise<void> {
+
+        const prisma = this.getPrismaClient(txContext)
         // await this.redisClient.set(this.getKey(userId), tokenId);
 
-        const user = await this.prismaService.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 idUser: userId
             },
@@ -23,7 +29,7 @@ export class RefreshTokenIdsStorage {
             }
         })
 
-        await this.prismaService.credential.update({
+        await prisma.credential.update({
             data: {
                 tokenId
             },
@@ -33,10 +39,11 @@ export class RefreshTokenIdsStorage {
         })
     }
 
-    async validate(userId: number, tokenId: string): Promise<boolean> {
+    async validate(userId: number, tokenId: string, txContext?: TransactionContext): Promise<boolean> {
+        const prisma = this.getPrismaClient(txContext)
         // const storedId = await this.redisClient.get(this.getKey(userId));
 
-        const credential = await this.prismaService.credential.findFirst({
+        const credential = await prisma.credential.findFirst({
             where: {
                 user: {
                     idUser: userId,
@@ -50,23 +57,16 @@ export class RefreshTokenIdsStorage {
         return credential.tokenId === tokenId;
     }
 
-    async invalidate(userId: number): Promise<void> {
+    async invalidate(credentialId: number, txContext?: TransactionContext): Promise<void> {
+        const prisma = this.getPrismaClient(txContext)
         // await this.redisClient.del(this.getKey(userId));
-        const user = await this.prismaService.user.findUnique({
-            where: {
-                idUser: userId
-            },
-            include: {
-                credential: true,
-            }
-        })
 
-        await this.prismaService.credential.update({
+        await prisma.credential.update({
             data: {
                 tokenId: null
             },
             where: {
-                idCredential: user.credential.idCredential,
+                idCredential: credentialId,
             }
         })
     }

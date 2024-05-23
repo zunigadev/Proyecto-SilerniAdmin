@@ -58,19 +58,7 @@ gender?: string  | null;
   required: false,
   nullable: true,
 })
-justification?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
 grade?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
-postulationChildCol?: string  | null;
 @ApiProperty({
   type: 'string',
   required: false,

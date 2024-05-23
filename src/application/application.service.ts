@@ -1,29 +1,89 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException,
+  NotFoundException
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
 import { StatusApplication } from 'src/common/enums/status-application.enum';
+import { BaseService } from 'src/common/services/base.service';
 import { CredentialService } from 'src/credential/credential.service';
+import { AuthService } from 'src/iam/auth/auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
+import { TutorService } from 'src/tutor/tutor.service';
+import { CreateTutorDto } from './dto/create-tutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
 
 @Injectable()
-export class ApplicationService {
+export class ApplicationService extends BaseService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly credentialService: CredentialService
-  ) {}
-
-  async findByID() {
-    return await this.prisma.user.findMany();
+    protected readonly prisma: PrismaService,
+    private readonly credentialService: CredentialService,
+    private readonly tutorService: TutorService,
+    private readonly authService: AuthService,
+  ) {
+    super(prisma)
   }
 
-  async createApplication(dataTutor: CreateDataTutorDto) {
+  async findByID(id: number, context?: TransactionContext) {
+    const prisma = this.getPrismaClient(context)
+
+    return await prisma.postulationChild.findUnique({
+      where: {
+        idPostulationChild: id,
+      },
+    });
+  }
+
+  async txCreateTutor(createTutor: CreateTutorDto) {
+    const prisma = this.getPrismaClient()
     try {
-      await this.prisma.$transaction(async (tx: PrismaClient) => {
+
+      return await prisma.$transaction(async (tx: PrismaClient) => {
+        const txContext = new TransactionContext(tx);
+
+        // verify if exists credential with email sent
+        const credential = await this.credentialService.findByEmail(createTutor.email, txContext)
+
+        if (credential) {
+          throw new ConflictException('Email already registered');
+        }
+        //
+
+        const { password, ...tutorToSave } = createTutor
+
+        // create tutor on db
+        await this.tutorService.create(tutorToSave, txContext)
+        //
+
+        // register user
+
+        return await this.authService.register({
+          name: createTutor.name,
+          m_surname: createTutor.lastName,
+          p_surname: createTutor.lastName,
+          status: 'normal',
+          credential: {
+            email: createTutor.email,
+            password: password,
+          }
+        },
+          txContext)
+        //
+
+      });
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+  /* async createApplication(dataTutor: CreateDataTutorDto, context?: TransactionContext) {
+    const prisma = this.getPrismaClient(context)
+    try {
+      await prisma.$transaction(async (tx: PrismaClient) => {
+
         const { postulationChildren, ...dataTutorToSave } = dataTutor;
 
         // check if exists credential with email datatutor.
@@ -60,24 +120,24 @@ export class ApplicationService {
           },
         });
 
-        // Crear credenciales para tutor
-        await this.createCredentialsAndLinkToTutor(
-          tx,
-          savedDataTutor.idDataTutor
-        );
       });
     } catch (error) {
       throw error;
     }
-  }
+  } */
 
   async changeStatusApplication(
     id: number,
-    statusApplication: UpdateStatusChildDto
+    statusApplication: UpdateStatusChildDto, context?: TransactionContext
   ) {
+    const prisma = this.getPrismaClient(context)
+
     try {
-      await this.prisma.$transaction(async (prisma: PrismaClient) => {
-        const postulationChild = await prisma.postulationChild.findUnique({
+      await prisma.$transaction(async (tx: PrismaClient) => {
+
+        const txContext = new TransactionContext(tx)
+
+        const postulationChild = await txContext.prisma.postulationChild.findUnique({
           where: { idPostulationChild: id },
           select: {
             status: true,
@@ -90,13 +150,13 @@ export class ApplicationService {
         }
 
         if (postulationChild.status !== StatusApplication.PENDING) {
-          throw new ConflictException('Application is not pending');
+          throw new ConflictException('Application in pending');
         }
 
         // Crear credenciales para estudiante y tutor (si es necesario)
         if (statusApplication.status === StatusApplication.ACCEPTED) {
           const postulationChildCredential =
-            await this.credentialService.generateCredentialsToStudent();
+            await this.credentialService.generateCredentialsToStudent(txContext);
 
           // Vincular credenciales al estudiante y guardar nuevo estado.
           await prisma.postulationChild.update({
@@ -114,6 +174,11 @@ export class ApplicationService {
             where: { idPostulationChild: id },
             data: {
               status: statusApplication.status,
+              reasons: {
+                create: statusApplication.argument ? {
+                  argument: statusApplication.argument,
+                } : undefined,
+              }
             },
           });
         }
@@ -123,40 +188,5 @@ export class ApplicationService {
     } catch (error) {
       throw error;
     }
-  }
-
-  private async createCredentialsAndLinkToTutor(
-    prisma: PrismaClient,
-    idDataTutor: number
-  ) {
-    const dataTutor = await prisma.dataTutor.findUnique({
-      where: { idDataTutor: idDataTutor },
-      select: {
-        idDataTutor: true,
-        email: true,
-        credential: true,
-      },
-    });
-
-    if (!dataTutor) {
-      throw new NotFoundException('Tutor not found');
-    }
-
-    if (dataTutor.credential) {
-      throw new ConflictException('Tutor already has credentials');
-    }
-
-    const tutorCredential =
-      await this.credentialService.generateCredentialsToTutor(dataTutor.email);
-
-    // Vincular credenciales al tutor
-    await prisma.dataTutor.update({
-      where: { idDataTutor: dataTutor.idDataTutor },
-      data: {
-        credential: {
-          connect: tutorCredential,
-        },
-      },
-    });
   }
 }

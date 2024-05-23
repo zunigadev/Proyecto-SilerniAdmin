@@ -1,63 +1,118 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, PreconditionFailedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'crypto';
+import { User } from 'src/generated/nestjs-dto/user.entity';
+import { HashingService } from 'src/hashing/hashing.service';
+import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
+import { EmailTokenDto } from './dto/email-token.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
-import { HashingService } from 'src/hashing/hashing.service';
-import { User } from 'src/generated/nestjs-dto/user.entity';
+import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
+import { CredentialService } from 'src/credential/credential.service';
 
 @Injectable()
-export class AuthService {
+export class AuthService extends BaseService {
   constructor(
+    protected readonly prismaService: PrismaService,
     private readonly hashingService: HashingService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
-  ) { }
-
-  async logIn(loginDto: LoginAuthDto) {
-    const { code, password } = loginDto;
-
-    const user = await this.userService.findByCode(code);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid code');
-    }
-    console.log(code); // Prueba de consola
-    const userpassword = user.credential.password;
-    const isPasswordValid = await this.hashingService.compare(password, userpassword);
-
-    console.log(password, userpassword); // Prueba de consola
-    console.log(isPasswordValid); // Prueba de consola
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
-
-    return await this.generateTokens(user);
+    private readonly loginAttemptService: LoginAttemptService,
+    private readonly credentialService: CredentialService,
+  ) {
+    super(prismaService)
   }
 
-  async register(registerDto: RegisterUserDto) {
-    // const { email, code } = registerDto.credential;
+  async logIn(loginDto: LoginAuthDto, txContext?: TransactionContext) {
 
-    // const passwordHash = await hash(password, 10);
+    let user = null;
+    try {
 
-    // registerDto.credential.password = passwordHash;
-    // registerDto = {...registerDto,credential:{email, code/*, password:passwordHash,repPassword:passwordHash}*/}
+      const { code, password } = loginDto;
 
-    return this.userService.createUser(registerDto);
+      user = await this.userService.findByCode(code, txContext);
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid code');
+      }
+
+      const userpassword = user.credential.password;
+      const isPasswordValid = await this.hashingService.compare(password, userpassword);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid password');
+      }
+
+      await this.loginAttemptService.logLoginAttempt(user.idUser, {
+        username: user.name,
+        success: true,
+        ipAddress: loginDto.ip,
+        userAgent: loginDto.userAgent,
+      }, txContext);
+
+      const tokens = await this.generateTokens(user);
+      return tokens
+    } catch (error) {
+      await this.loginAttemptService.logLoginAttempt(user.idUser, {
+        username: user.name,
+        success: false,
+        ipAddress: loginDto.ip,
+        userAgent: loginDto.userAgent,
+      }, txContext);
+      throw error
+    }
   }
 
-  async generateTokens(user: User) {
+  async register(registerDto: RegisterUserDto, txContext?: TransactionContext) {
+    if (txContext) {
+      const newUser = await this.userService.createUser(registerDto, txContext);
+
+      return this.generateTokenToValidateEmail(newUser, txContext);
+    }
+
+    try {
+
+      const prisma = this.getPrismaClient()
+
+      return await prisma.$transaction(async (tx: PrismaClient) => {
+        const txContext = new TransactionContext(tx)
+
+        // verify if exists credential with email sent
+        const credential = await this.credentialService.findByEmail(registerDto.credential.email, txContext)
+
+        if (credential) {
+          throw new ConflictException('Email already registered');
+        }
+        //
+
+        const newUser = await this.userService.createUser(registerDto, txContext);
+
+        return this.generateTokenToValidateEmail(newUser, txContext);
+
+      })
+    } catch (error) {
+      throw error
+    }
+
+
+  }
+
+  async generateTokens(user: User, txContext?: TransactionContext) {
+
     const refreshTokenId = randomUUID();
     const [accessToken, refreshToken] = await Promise.all([
       this.signToken<Partial<ActiveUserData>>(
@@ -73,14 +128,76 @@ export class AuthService {
         refreshTokenId,
       }),
     ]);
-    await this.refreshTokenIdsStorage.insert(user.idUser, refreshTokenId);
+    await this.refreshTokenIdsStorage.insert(user.idUser, refreshTokenId, txContext);
     return {
       accessToken,
       refreshToken,
     };
   }
 
-  async refreshTokens(refreshTokenDto: RefreshTokenDto) {
+  async generateTokenToValidateEmail(user: User, txContext?: TransactionContext) {
+    const emailTokenId = randomUUID();
+    const emailToken = await this.signToken(user.idUser, this.jwtConfiguration.emailTokenTtl, {
+      emailTokenId
+    })
+    await this.refreshTokenIdsStorage.insert(user.idUser, emailTokenId, txContext);
+
+    return emailToken
+  }
+
+  async requestNewEmailToken(requestNewEmailTokenDto: RequestNewEmailTokenDto, txContext?: TransactionContext) {
+    const { email } = requestNewEmailTokenDto;
+    const user = await this.userService.findByEmail(email, txContext);
+    if (!user) {
+      throw new BadRequestException('User with this email does not exist');
+    }
+    if (user.credential.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    return this.generateTokenToValidateEmail(user, txContext);
+  }
+
+  async verifyEmailToken(emailTokenDto: EmailTokenDto, txContext?: TransactionContext) {
+    try {
+      const { sub, emailTokenId } = await this.jwtService.verifyAsync<
+        Pick<ActiveUserData, "sub"> & { emailTokenId: string }
+      >(emailTokenDto.emailToken, {
+        secret: this.jwtConfiguration.secret,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      });
+      const user = await this.userService.findById(sub, txContext);
+
+      if (user.credential.emailVerified) {
+        throw new PreconditionFailedException("Email already verified");
+      }
+
+      const isValid = await this.refreshTokenIdsStorage.validate(
+        user.idUser,
+        emailTokenId,
+        txContext,
+      );
+      if (isValid) {
+        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential, txContext);
+
+        await this.userService.verifyEmail(user.credential.idCredential, txContext);
+
+      } else {
+        throw new BadRequestException("Email Token is invalid");
+      }
+      return {
+        success: true,
+      }
+    } catch (err) {
+      if (err instanceof InvalidateRefreshTokenError) {
+        throw new UnauthorizedException("Access denied");
+      }
+      throw err
+    }
+  }
+
+  async refreshTokens(refreshTokenDto: RefreshTokenDto, txContext?: TransactionContext) {
     try {
       const { sub, refreshTokenId } = await this.jwtService.verifyAsync<
         Pick<ActiveUserData, "sub"> & { refreshTokenId: string }
@@ -89,18 +206,19 @@ export class AuthService {
         audience: this.jwtConfiguration.audience,
         issuer: this.jwtConfiguration.issuer,
       });
-      const user = await this.userService.findById(sub);
+      const user = await this.userService.findById(sub, txContext);
 
       const isValid = await this.refreshTokenIdsStorage.validate(
         user.idUser,
         refreshTokenId,
+        txContext
       );
       if (isValid) {
-        await this.refreshTokenIdsStorage.invalidate(user.idUser);
+        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential, txContext);
       } else {
         throw new Error("Refresh Token is invalid");
       }
-      return this.generateTokens(user);
+      return this.generateTokens(user, txContext);
     } catch (err) {
       if (err instanceof InvalidateRefreshTokenError) {
         throw new UnauthorizedException("Access denied");

@@ -3,6 +3,7 @@ import {ApiProperty} from '@nestjs/swagger'
 import {DataTutor} from './dataTutor.entity'
 import {FilesPostulation} from './filesPostulation.entity'
 import {Credential} from './credential.entity'
+import {Reason} from './reason.entity'
 
 
 export class PostulationChild {
@@ -55,17 +56,7 @@ gender: string  | null;
   type: 'string',
   nullable: true,
 })
-justification: string  | null;
-@ApiProperty({
-  type: 'string',
-  nullable: true,
-})
 grade: string  | null;
-@ApiProperty({
-  type: 'string',
-  nullable: true,
-})
-postulationChildCol: string  | null;
 @ApiProperty({
   type: 'string',
   nullable: true,
@@ -100,4 +91,9 @@ credential?: Credential  | null;
   nullable: true,
 })
 credentialId: number  | null;
+@ApiProperty({
+  isArray: true,
+  required: false,
+})
+reasons?: Reason[] ;
 }

@@ -1,12 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { MetadataScanner, ModulesContainer, Reflector } from '@nestjs/core';
 import { PrismaClient } from '@prisma/client';
 import { Permission } from 'src/generated/nestjs-dto/permission.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class PermissionService {
+export class PermissionService implements OnModuleInit {
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly reflector: Reflector,
+        private readonly modulesContainer: ModulesContainer,
+        private readonly metadataScanner: MetadataScanner,
+    ) { }
+    async onModuleInit() {
+        await this.registerPermissionsFromControllers();
+    }
+
+    async registerPermissionsFromControllers() {
+        // const permissions: CreatePermissionDto[] = [];
+
+        // todo: get permissions from controllers
+
+    }
 
     // assign permissions to user
     async assignPermissionsToUser(userId: number, permissionIds: number[]): Promise<any> {
@@ -64,8 +80,7 @@ export class PermissionService {
         const rolePermissions = userWithPermissions.roles.flatMap(ur => ur.role.permissions.map(rp => rp.permission));
         const userPermissions = userWithPermissions.permissions.map(up => up.permission);
 
-        // added casl factory
-
         return [...new Set([...rolePermissions, ...userPermissions])];
     }
+
 }
