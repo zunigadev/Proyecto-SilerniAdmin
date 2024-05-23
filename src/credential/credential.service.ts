@@ -3,6 +3,7 @@ import { HashingService } from 'src/hashing/hashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SequenceCounterService } from 'src/sequence-counter/sequence-counter.service';
 import { CreateCredentialDto } from './dto/create-credential.dto';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class CredentialService {
@@ -28,25 +29,26 @@ export class CredentialService {
     return passwordHash;
   }
 
-  async generateStudentCode(): Promise<string> {
+  async generateStudentCode(prisma: PrismaClient): Promise<string> {
     const nextCode = await this.sequenceCounterService.nextVal(
+      prisma,
       this.sequenceName
     );
     return `ALU${nextCode.toString().padStart(6, '0')}`;
   }
 
-  async generateCredentialsToStudent() {
+  async generateCredentialsToStudent(prisma: PrismaClient) {
     const temporaryPassword = await this.generateTemporaryPassword(8);
-    const studentCode = await this.generateStudentCode();
-    return this.saveCredentials({
+    const studentCode = await this.generateStudentCode(prisma);
+    return this.saveCredentials(prisma,{
       code: studentCode,
       password: temporaryPassword,
       repPassword: temporaryPassword,
     });
   }
 
-  async generateCredentialsToTutor(email: string) {
-    const credentials = await this.prismaService.credential.findUnique({
+  async generateCredentialsToTutor(prisma:PrismaClient, email: string) {
+    const credentials = await prisma.credential.findUnique({
       where: {
         email: email,
       },
@@ -58,7 +60,7 @@ export class CredentialService {
 
     const temporaryPassword = await this.generateTemporaryPassword(8);
 
-    return this.saveCredentials({
+    return this.saveCredentials(prisma,{
       email: email,
       password: temporaryPassword,
       repPassword: temporaryPassword,
@@ -66,8 +68,8 @@ export class CredentialService {
   }
 
   // Función para guardar credenciales
-  async saveCredentials(createCredentialDto: CreateCredentialDto) {
-    return await this.prismaService.credential.create({
+  async saveCredentials(prisma: PrismaClient, createCredentialDto: CreateCredentialDto) {
+    return await prisma.credential.create({
       data: createCredentialDto,
     });
   }

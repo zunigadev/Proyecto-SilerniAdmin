@@ -1,10 +1,7 @@
-
 import {ApiProperty} from '@nestjs/swagger'
 
 
-
-
-export class CreatePostulationChildDto {
+export class CreateTutorDto {
   @ApiProperty({
   type: 'string',
   required: false,
@@ -16,13 +13,19 @@ name?: string  | null;
   required: false,
   nullable: true,
 })
-paternalLastName?: string  | null;
+lastName?: string  | null;
 @ApiProperty({
   type: 'string',
   required: false,
   nullable: true,
 })
-maternalLastName?: string  | null;
+documentType?: string  | null;
+@ApiProperty({
+  type: 'string',
+  required: false,
+  nullable: true,
+})
+document?: string  | null;
 @ApiProperty({
   type: 'string',
   required: false,
@@ -34,7 +37,7 @@ phone?: string  | null;
   required: false,
   nullable: true,
 })
-birthDate?: string  | null;
+relationship?: string  | null;
 @ApiProperty({
   type: 'string',
   required: false,
@@ -46,23 +49,6 @@ email?: string  | null;
   required: false,
   nullable: true,
 })
-address?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
 gender?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
-grade?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
-level?: string  | null;
+
 }

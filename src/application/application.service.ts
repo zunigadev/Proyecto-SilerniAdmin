@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,17 +10,61 @@ import { CredentialService } from 'src/credential/credential.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { TutorService } from 'src/tutor/tutor.service';
+import { CreateTutorDto } from './dto/create-tutor.dto';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly credentialService: CredentialService
-  ) {}
+    private readonly credentialService: CredentialService,
+    private tutorService: TutorService
+  ) { }
 
-  async findByID() {
-    return await this.prisma.user.findMany();
+  async findByID(id: number) {
+    return await this.prisma.postulationChild.findUnique({
+      where: {
+        idPostulationChild: id,
+      },
+    });
   }
+
+  async createTutor(createTutor: CreateTutorDto) {
+
+    try {
+
+      await this.prisma.$transaction(async (tx:PrismaClient) =>{
+        const { ...dataTutorToSave } = createTutor;
+
+        const tutorCredential = await tx.credential.findUnique({
+          where: {
+            email: dataTutorToSave.email,
+          },
+        });
+
+        if (tutorCredential) {
+          throw new ConflictException('Email already registered');
+        }
+
+        const savedDataTutor = await tx.dataTutor.create({
+          data: {
+            ...dataTutorToSave,
+          },
+        });
+
+        // Crear credenciales para tutor
+        await this.createCredentialsAndLinkToTutor(
+          tx,
+          savedDataTutor.idDataTutor
+        ); 
+
+      });
+
+    } catch (error) {
+      throw error;
+    }
+  }
+
 
   async createApplication(dataTutor: CreateDataTutorDto) {
     try {
@@ -90,13 +135,13 @@ export class ApplicationService {
         }
 
         if (postulationChild.status !== StatusApplication.PENDING) {
-          throw new ConflictException('Application is not pending');
+          throw new ConflictException('Application in pending');
         }
 
         // Crear credenciales para estudiante y tutor (si es necesario)
         if (statusApplication.status === StatusApplication.ACCEPTED) {
           const postulationChildCredential =
-            await this.credentialService.generateCredentialsToStudent();
+            await this.credentialService.generateCredentialsToStudent(prisma);
 
           // Vincular credenciales al estudiante y guardar nuevo estado.
           await prisma.postulationChild.update({
@@ -114,6 +159,11 @@ export class ApplicationService {
             where: { idPostulationChild: id },
             data: {
               status: statusApplication.status,
+              reasons: {
+                create: statusApplication.argument ? {
+                  argument: statusApplication.argument,
+                } : undefined,
+              }
             },
           });
         }
@@ -147,14 +197,14 @@ export class ApplicationService {
     }
 
     const tutorCredential =
-      await this.credentialService.generateCredentialsToTutor(dataTutor.email);
+      await this.credentialService.generateCredentialsToTutor(prisma, dataTutor.email);
 
     // Vincular credenciales al tutor
     await prisma.dataTutor.update({
       where: { idDataTutor: dataTutor.idDataTutor },
       data: {
         credential: {
-          connect: tutorCredential,
+          connect: {idCredential:tutorCredential.idCredential},
         },
       },
     });

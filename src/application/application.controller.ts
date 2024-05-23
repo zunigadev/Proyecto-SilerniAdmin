@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
   Param,
@@ -14,6 +15,7 @@ import { ApplicationService } from './application.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { CreateTutorDto } from './dto/create-tutor.dto';
 
 @Controller('application')
 export class ApplicationController {
@@ -22,7 +24,7 @@ export class ApplicationController {
   @Get(':id')
   getByID(@Param('id', ParseIntPipe) id: number) {
     console.log(id); //Prueba de consola
-    return this.applicationService.findByID();
+    return this.applicationService.findByID(id);
   }
 
   @Post()
@@ -40,6 +42,19 @@ export class ApplicationController {
     return this.applicationService.createApplication(dataTutor);
   }
 
+  @Post('tutor')
+  async createTutor(@Body() createTutorDto: CreateTutorDto) {
+      try {
+          await this.applicationService.createTutor(createTutorDto);
+          return 'Tutor creado exitosamente';
+      } catch (error) {
+          if (error instanceof ConflictException) {
+              throw new ConflictException('El correo electrónico ya está registrado');
+          }
+          throw error;
+      }
+  }
+
   @Patch(':id')
   async changeStatus(
     @Param('id') id: number,
@@ -51,3 +66,8 @@ export class ApplicationController {
     );
   }
 }
+
+
+
+
+   
