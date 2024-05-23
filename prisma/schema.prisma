@@ -206,3 +206,57 @@ model FilesPostulation {
 
   @@map("FilesPostulation")
 }
+
+/// Payments with Stripe
+
+// schema.prisma
+model Payment {
+  id             Int      @id @default(autoincrement())
+  stripeChargeId String
+  amount         Int
+  currency       String
+  description    String
+  status         String
+  customerEmail  String?
+  created        DateTime @default(now())
+}
+
+model FullStripePayment {
+  id                    Int      @id @default(autoincrement())
+  stripeChargeId        String   @unique
+  amount                Int
+  amountCaptured        Int?
+  amountRefunded        Int?
+  applicationFeeAmount  Int?
+  balanceTransaction    String?
+  billingDetailsName    String?
+  billingDetailsEmail   String?
+  billingDetailsPhone   String?
+  billingDetailsAddress Address? @relation(fields: [addressId], references: [id])
+  currency              String
+  customer              String?
+  description           String
+  failureCode           String?
+  failureMessage        String?
+  invoice               String?
+  metadata              Json?
+  paymentIntent         String?
+  paymentMethod         String?
+  receiptEmail          String?
+  receiptUrl            String?
+  refunded              Boolean  @default(false)
+  status                String
+  created               DateTime @default(now())
+  addressId             Int?
+}
+
+model Address {
+  id                Int                 @id @default(autoincrement())
+  city              String?
+  country           String?
+  line1             String?
+  line2             String?
+  postalCode        String?
+  state             String?
+  FullStripePayment FullStripePayment[]
+}

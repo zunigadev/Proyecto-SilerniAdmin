@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -16,7 +17,7 @@ import { UpdateStatusChildDto } from './dto/update-status.dto';
 
 @Controller('application')
 export class ApplicationController {
-  constructor(private readonly applicationService: ApplicationService) {}
+  constructor(private readonly applicationService: ApplicationService) { }
 
   @Get(':id')
   getByID(@Param('id', ParseIntPipe) id: number) {
@@ -32,7 +33,7 @@ export class ApplicationController {
   ) {
     //Verificar tipo de dato any
     if (!files || files.length === 0) {
-      throw new Error('No files uploaded');
+      throw new BadRequestException('No files uploaded');
     }
     const dataTutor: CreateDataTutorDto = JSON.parse(data.body);
 
