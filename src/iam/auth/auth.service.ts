@@ -42,9 +42,13 @@ export class AuthService extends BaseService {
     let user = null;
     try {
 
-      const { code, password } = loginDto;
+      const { code, email, password } = loginDto;
 
-      user = await this.userService.findByCode(code, txContext);
+      if (email) {
+        user = await this.userService.findByCode(email, txContext);
+      } else if (code){
+        user = await this.userService.findByCode(code, txContext);
+      }
 
       if (!user) {
         throw new UnauthorizedException('Invalid code');
