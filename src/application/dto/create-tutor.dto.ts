@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CreatePostulationChildDto } from './create-postulationChild.dto';
 
 export class CreateTutorDto {
     @ApiProperty({
@@ -49,4 +50,6 @@ export class CreateTutorDto {
         nullable: true,
       })
       gender?: string | null;
+      
+      postulationChildren?: CreatePostulationChildDto[];
 }

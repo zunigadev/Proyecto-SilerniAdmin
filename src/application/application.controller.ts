@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   Param,
@@ -13,6 +14,7 @@ import { ApplicationService } from './application.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { CreateTutorDto } from './dto/create-tutor.dto';
 
 @Controller('application')
 export class ApplicationController {
@@ -40,12 +42,16 @@ export class ApplicationController {
   }
 
   @Post('tutor')
-  async createTutor(@Body() createTutorDto: CreateDataTutorDto){
-    try{
-      return await this.applicationService.createTutor(createTutorDto)
-    }catch(error){
-
-    }
+  async createTutor(@Body() createTutorDto: CreateTutorDto) {
+      try {
+          await this.applicationService.createTutor(createTutorDto);
+          return 'Tutor creado exitosamente';
+      } catch (error) {
+          if (error instanceof ConflictException) {
+              throw new ConflictException('El correo electrónico ya está registrado');
+          }
+          throw error;
+      }
   }
 
   @Patch(':id')
@@ -59,3 +65,8 @@ export class ApplicationController {
     );
   }
 }
+
+
+
+
+   

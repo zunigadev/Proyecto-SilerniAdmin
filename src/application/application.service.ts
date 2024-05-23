@@ -19,7 +19,7 @@ export class ApplicationService {
     private readonly prisma: PrismaService,
     private readonly credentialService: CredentialService,
     private tutorService: TutorService
-  ) {}
+  ) { }
 
   async findByID(id: number) {
     return await this.prisma.postulationChild.findUnique({
@@ -30,16 +30,41 @@ export class ApplicationService {
   }
 
   async createTutor(createTutor: CreateTutorDto) {
-    
-    const tutor = await this.tutorService.findByEmail(createTutor.email)
 
-    if(tutor) {
-      throw new BadRequestException('Tutor alredy exists');
+    try {
+
+      await this.prisma.$transaction(async (tx:PrismaClient) =>{
+        const { ...dataTutorToSave } = createTutor;
+
+        const tutorCredential = await tx.credential.findUnique({
+          where: {
+            email: dataTutorToSave.email,
+          },
+        });
+
+        if (tutorCredential) {
+          throw new ConflictException('Email already registered');
+        }
+
+        const savedDataTutor = await tx.dataTutor.create({
+          data: {
+            ...dataTutorToSave,
+          },
+        });
+
+        // Crear credenciales para tutor
+        await this.createCredentialsAndLinkToTutor(
+          tx,
+          savedDataTutor.idDataTutor
+        ); 
+
+      });
+
+    } catch (error) {
+      throw error;
     }
-
-    return this.tutorService.create(createTutor)
   }
-  
+
 
   async createApplication(dataTutor: CreateDataTutorDto) {
     try {
@@ -116,7 +141,7 @@ export class ApplicationService {
         // Crear credenciales para estudiante y tutor (si es necesario)
         if (statusApplication.status === StatusApplication.ACCEPTED) {
           const postulationChildCredential =
-            await this.credentialService.generateCredentialsToStudent();
+            await this.credentialService.generateCredentialsToStudent(prisma);
 
           // Vincular credenciales al estudiante y guardar nuevo estado.
           await prisma.postulationChild.update({
@@ -172,14 +197,14 @@ export class ApplicationService {
     }
 
     const tutorCredential =
-      await this.credentialService.generateCredentialsToTutor(dataTutor.email);
+      await this.credentialService.generateCredentialsToTutor(prisma, dataTutor.email);
 
     // Vincular credenciales al tutor
     await prisma.dataTutor.update({
       where: { idDataTutor: dataTutor.idDataTutor },
       data: {
         credential: {
-          connect: tutorCredential,
+          connect: {idCredential:tutorCredential.idCredential},
         },
       },
     });
