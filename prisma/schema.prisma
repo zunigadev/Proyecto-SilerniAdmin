@@ -131,13 +131,15 @@ model UserPermission {
 }
 
 model Credential {
-  idCredential  Int     @id @default(autoincrement())
-  code          String? @unique
-  email         String? @unique
-  emailVerified Boolean @default(false)
-  password      String
-  repPassword   String
-  tokenId       String?
+  idCredential     Int     @id @default(autoincrement())
+  code             String? @unique
+  email            String? @unique
+  emailVerified    Boolean @default(false)
+  password         String
+  repPassword      String
+  refreshTokenId   String?
+  emailTokenId     String?
+  resetPassTokenId String?
 
   //Relations
   user             User?

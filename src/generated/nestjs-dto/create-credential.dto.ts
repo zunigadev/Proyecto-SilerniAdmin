@@ -30,5 +30,17 @@ repPassword: string ;
   required: false,
   nullable: true,
 })
-tokenId?: string  | null;
+refreshTokenId?: string  | null;
+@ApiProperty({
+  type: 'string',
+  required: false,
+  nullable: true,
+})
+emailTokenId?: string  | null;
+@ApiProperty({
+  type: 'string',
+  required: false,
+  nullable: true,
+})
+resetPassTokenId?: string  | null;
 }
