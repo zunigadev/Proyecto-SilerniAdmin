@@ -1,10 +1,10 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { HashingService } from 'src/hashing/hashing.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { SequenceCounterService } from 'src/sequence-counter/sequence-counter.service';
+import { HashingService } from '../hashing/hashing.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SequenceCounterService } from '../sequence-counter/sequence-counter.service';
 import { CreateCredentialDto } from './dto/create-credential.dto';
-import { TransactionContext } from 'src/common/contexts/transaction.context';
-import { BaseService } from 'src/common/services/base.service';
+import { TransactionContext } from '../common/contexts/transaction.context';
+import { BaseService } from '../common/services/base.service';
 
 @Injectable()
 export class CredentialService extends BaseService {

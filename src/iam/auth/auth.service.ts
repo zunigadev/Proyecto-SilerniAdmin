@@ -20,6 +20,7 @@ import { BaseService } from 'src/common/services/base.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClient } from '@prisma/client';
 import { CredentialService } from 'src/credential/credential.service';
+import { truncate } from 'fs';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -40,18 +41,26 @@ export class AuthService extends BaseService {
   async logIn(loginDto: LoginAuthDto, txContext?: TransactionContext) {
 
     let user = null;
+
     try {
 
-      const { code, email, password } = loginDto;
+      const { code, email,  password } = loginDto;
 
-      if (email) {
-        user = await this.userService.findByCode(email, txContext);
-      } else if (code){
+      console.log(loginDto)
+
+
+      if (email && !code) {
+        user = await this.userService.findByEmail(email, txContext);
+      } else {
         user = await this.userService.findByCode(code, txContext);
       }
 
+      if(!email && !code){
+        throw new BadRequestException('Error')
+      }
+
       if (!user) {
-        throw new UnauthorizedException('Invalid code');
+        throw new UnauthorizedException('Invalid code or Email');
       }
 
       const userpassword = user.credential.password;

@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { TransactionContext } from 'src/common/contexts/transaction.context';
-import { CredentialService } from 'src/credential/credential.service';
-import { HashingService } from 'src/hashing/hashing.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TransactionContext } from '../common/contexts/transaction.context';
+import { CredentialService } from '../credential/credential.service';
+import { HashingService } from '../hashing/hashing.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { BaseService } from 'src/common/services/base.service';
+import { BaseService } from '../common/services/base.service';
 
 @Injectable()
 export class UserService extends BaseService {
