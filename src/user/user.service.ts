@@ -104,7 +104,7 @@ export class UserService extends BaseService {
       const { name, p_surname, m_surname, status, credential } = createUserDto;
       console.log(createUserDto);
 
-      if (!credential.password) {
+      if (!credential) {
         const temporaryPassword =
           await this.credentialService.generateTemporaryPassword(8);
         credential.password = temporaryPassword;

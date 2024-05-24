@@ -16,11 +16,14 @@ export class CreateUserDto {
   @IsOptional() // Marca como opcional
   credential: {
    
-    readonly email?: string;
+    email?: string;
+
     
-    readonly code?: string;
+    code?: string;
+
     
     password?: string;
+
 
     repPassword?: string;
   };
