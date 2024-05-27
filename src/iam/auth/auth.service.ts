@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Inject, Injectable, PreconditionFailedException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, PreconditionFailedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
@@ -20,9 +20,11 @@ import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
-import { TokenType } from './enum/token-type.enum';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { TokenIdsStorage } from './token-ids-storage';
+import { TokenType } from './enum/token-type.enum';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { EmailDto } from './dto/email.dto';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -45,14 +47,27 @@ export class AuthService extends BaseService {
   async logIn(loginDto: LoginAuthDto, txContext?: TransactionContext) {
 
     let user = null;
+
     try {
 
-      const { code, password } = loginDto;
+      const { code, email, password } = loginDto;
 
-      user = await this.userService.findByCode(code, txContext);
+      console.log(loginDto)
+
+
+      if (!email && !code) {
+        throw new BadRequestException('You must send code or email of user')
+      }
+
+      if (email && !code) {
+        user = await this.userService.findByEmail(email, txContext);
+      } else {
+        user = await this.userService.findByCode(code, txContext);
+      }
+
 
       if (!user) {
-        throw new UnauthorizedException('Invalid code');
+        throw new NotFoundException('User not found');
       }
 
       const userpassword = user.credential.password;
@@ -176,6 +191,23 @@ export class AuthService extends BaseService {
     return emailToken
   }
 
+  async generateTokenResetPassword(emailDto: EmailDto, txContext?: TransactionContext) {
+    const userEmail = await this.userService.findByEmail(emailDto.email)
+
+    if (!userEmail) {
+      throw new NotFoundException('Email not found')
+    }
+    const passwordTokenId = randomUUID();
+    const passwordRestartToken = await this.signToken(userEmail.idUser, this.jwtConfiguration.resetPasswordTokenTtl, {
+      passwordTokenId
+    })
+
+    await this.tokenIdsStorage.insert(userEmail.idUser, passwordTokenId, TokenType.RESET_PASSWORD, txContext)
+
+    return passwordRestartToken;
+  }
+
+
   async requestNewEmailToken(requestNewEmailTokenDto: RequestNewEmailTokenDto, txContext?: TransactionContext) {
     const { email } = requestNewEmailTokenDto;
     const user = await this.userService.findByEmail(email, txContext);
@@ -217,6 +249,46 @@ export class AuthService extends BaseService {
 
       } else {
         throw new BadRequestException("Email Token is invalid");
+      }
+      return {
+        success: true,
+      }
+    } catch (err) {
+      if (err instanceof InvalidateRefreshTokenError) {
+        throw new UnauthorizedException("Access denied");
+      }
+      throw err
+    }
+  }
+
+  async resetPassword(resetTokenDto: ResetPasswordDto, txContext?: TransactionContext) {
+    try {
+      const { sub, passwordTokenId } = await this.jwtService.verifyAsync<
+        Pick<ActiveUserData, "sub"> & { passwordTokenId: string }
+      >(resetTokenDto.resetToken, {
+        secret: this.jwtConfiguration.secret,
+        audience: this.jwtConfiguration.audience,
+        issuer: this.jwtConfiguration.issuer,
+      });
+      const user = await this.userService.findById(sub, txContext);
+
+      // if (user.credential.emailVerified) {
+      //   throw new PreconditionFailedException("Email already verified");
+      // }
+
+      const isValid = await this.tokenIdsStorage.validate(
+        user.idUser,
+        passwordTokenId,
+        TokenType.RESET_PASSWORD,
+        txContext,
+      );
+      if (isValid) {
+        await this.tokenIdsStorage.invalidate(user.credential.idCredential, TokenType.RESET_PASSWORD, txContext);
+
+        await this.userService.changePassword(user.credential.idCredential, resetTokenDto.password, txContext);
+
+      } else {
+        throw new BadRequestException("Invalid Token");
       }
       return {
         success: true,

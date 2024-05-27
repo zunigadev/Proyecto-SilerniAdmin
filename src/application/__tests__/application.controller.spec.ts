@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApplicationController } from './application.controller';
-import { ApplicationService } from './application.service';
-import { CreateDataTutorDto } from './dto/create-dataTutor.dto';
-import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { ApplicationController } from '../application.controller';
+import { ApplicationService } from '../application.service';
+import { CreateDataTutorDto } from '../dto/create-dataTutor.dto';
+import { UpdateStatusChildDto } from '../dto/update-status.dto';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 

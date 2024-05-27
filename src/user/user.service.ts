@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '@prisma/client';
-import { TransactionContext } from 'src/common/contexts/transaction.context';
-import { CredentialService } from 'src/credential/credential.service';
-import { HashingService } from 'src/hashing/hashing.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TransactionContext } from '../common/contexts/transaction.context';
+import { CredentialService } from '../credential/credential.service';
+import { HashingService } from '../hashing/hashing.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { BaseService } from 'src/common/services/base.service';
+import { BaseService } from '../common/services/base.service';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -19,7 +19,7 @@ export class UserService extends BaseService {
 
   async findAll(txContext?: TransactionContext): Promise<User[]> {
     const prisma = this.getPrismaClient(txContext)
-
+    
     return await prisma.user.findMany();
   }
 
@@ -102,9 +102,9 @@ export class UserService extends BaseService {
     try {
       const prisma = this.getPrismaClient(txContext)
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto);
+      console.log(createUserDto); //Prueba de consola
 
-      if (!credential.password) {
+      if (!credential) {
         const temporaryPassword =
           await this.credentialService.generateTemporaryPassword(8);
         credential.password = temporaryPassword;
@@ -152,4 +152,29 @@ export class UserService extends BaseService {
       }
     })
   }
+
+  async changePassword(credentialId: number, newPassword: string, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    const credential = await prisma.credential.findUnique(
+      {where: {idCredential:credentialId}, 
+      select: { idCredential:true}
+    });
+
+    if(!credential) {
+      throw new NotFoundException('User not found')
+    }
+
+    const encryptedPassword = await this.hashingService.hash(newPassword)
+
+    await prisma.credential.update({
+      data: {
+        password: encryptedPassword
+      },
+      where: {
+        idCredential: credentialId
+      }
+    })
+  }
+
 }

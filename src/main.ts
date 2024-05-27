@@ -13,7 +13,11 @@ async function bootstrap() {
     credentials: configService.get('cors.credentials'),
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
   await app.listen(3000);
 }
 bootstrap();

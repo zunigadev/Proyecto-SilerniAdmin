@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { TransactionContext } from 'src/common/contexts/transaction.context';
-import { BaseService } from 'src/common/services/base.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { TransactionContext } from '../common/contexts/transaction.context';
+import { BaseService } from '../common/services/base.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SequenceCounterService extends BaseService {
