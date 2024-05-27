@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as Brevo from '@getbrevo/brevo'
+import { ConfigService } from '@nestjs/config';
 
 
 @Injectable()
@@ -7,8 +8,9 @@ export class MailerService {
 
     private apiInstance: Brevo.TransactionalEmailsApi;
 
-    constructor() {
-        const apiKey = process.env.BREVO_API_KEY
+    constructor(private configService: ConfigService) {
+        const apiKey = this.configService.get<string>('email.key')
+
         this.apiInstance = new Brevo.TransactionalEmailsApi();
 
         this.apiInstance.setApiKey(0, apiKey)
