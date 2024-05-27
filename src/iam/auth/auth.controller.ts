@@ -26,7 +26,9 @@ export class AuthController {
 
   // Pruebas
   @Post('register')
-  registerUser(@Body() registerDto: RegisterUserDto) {
+  registerUser(@Req() req: Request, @Body() registerDto: RegisterUserDto) {
+
+    registerDto.userAgent = req.headers['user-agent'];
     return this.authService.register(registerDto);
   }
 

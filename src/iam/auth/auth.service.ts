@@ -66,7 +66,6 @@ export class AuthService extends BaseService {
 
       await Promise.all([
         this.deviceService.registerDevice({
-          ip: loginDto.ip,
           userAgent: loginDto.userAgent,
           userId: user.idUser,
         }),
@@ -121,7 +120,15 @@ export class AuthService extends BaseService {
 
         const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
 
-        await this.mailerService.sendConfirmEmail(newUser, emailToken)
+        // register device and send email
+        await Promise.all([
+          this.mailerService.sendConfirmEmail(newUser, emailToken),
+          this.deviceService.registerDevice({
+            userAgent: registerDto.userAgent,
+            userId: newUser.idUser,
+
+          }, txContext)
+        ])
 
         return {
           success: true

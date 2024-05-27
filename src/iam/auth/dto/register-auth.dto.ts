@@ -9,4 +9,5 @@ export class RegisterUserDto {
     password?: string;
     repPassword?: string;
   };
+  userAgent?: string = null;
 }

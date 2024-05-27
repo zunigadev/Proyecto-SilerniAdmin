@@ -63,4 +63,6 @@ export class CreateTutorDto {
   password: string;
 
   postulationChildren?: CreatePostulationChildDto[];
+
+  userAgent?: string;
 }

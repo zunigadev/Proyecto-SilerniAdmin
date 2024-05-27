@@ -66,7 +66,8 @@ export class ApplicationService extends BaseService {
           credential: {
             email: createTutor.email,
             password: password,
-          }
+          },
+          userAgent: '',
         },
           txContext)
         //
