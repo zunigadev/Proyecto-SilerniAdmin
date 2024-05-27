@@ -15,6 +15,8 @@ import { PoliciesGuard } from "./authorization/guards/policies.guard";
 import jwtConfig from "./config/jwt.config";
 import { CredentialModule } from "src/credential/credential.module";
 import { TokenIdsStorage } from "./auth/token-ids-storage";
+import { MailerModule } from "src/mailer/mailer.module";
+import { DeviceModule } from "src/device/device.module";
 
 @Module({
   imports: [
@@ -23,9 +25,11 @@ import { TokenIdsStorage } from "./auth/token-ids-storage";
     CredentialModule,
     HashingModule,
     CaslModule,
+    DeviceModule,
     LoginAttemptModule,
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
+    MailerModule,
   ],
   providers: [
     {

@@ -17,8 +17,15 @@ import { TestModule } from './test/test.module';
 import { TutorModule } from './tutor/tutor.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
+import { ConfigModule } from '@nestjs/config';
+import { DeviceModule } from './device/device.module';
+import config from './config/configuration'
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      load: [config],
+      isGlobal: true,
+    }),
     PrismaModule,
     PermissionModule,
     CaslModule,
@@ -33,6 +40,7 @@ import { MailerModule } from './mailer/mailer.module';
     LoginAttemptModule,
     TutorModule,
     MailerModule,
+    DeviceModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],

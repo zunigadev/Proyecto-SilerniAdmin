@@ -19,15 +19,21 @@ export class TestController {
     }
 
     @Get('user/:userId')
-    @CheckPolicies((ability: AppAbility) => ability.can(ActionAuthorization.Read, 'user'))
+    // @CheckPolicies((ability: AppAbility) => ability.can(ActionAuthorization.Read, 'user'))
     async getUserPermissions(@Param('userId') userId: number) {
-        return userId
+        return {
+            success: true,
+            userId
+        }
     }
 
     @Get('send-email')
     @Auth(AuthType.None)
     async sendEmail() {
-        return this.mailerService.sendMail('full01@silerni.com', 'test')
+        return this.mailerService.sendMail('test', 'full01@silerni.com', 1, {
+            name: 'full01',
+            linkEmailToken: 'https://developers.brevo.com/reference/sendtransacemail',
+        })
     }
 
 }

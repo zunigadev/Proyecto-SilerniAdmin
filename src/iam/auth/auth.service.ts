@@ -6,9 +6,11 @@ import { randomUUID } from 'crypto';
 import { TransactionContext } from 'src/common/contexts/transaction.context';
 import { BaseService } from 'src/common/services/base.service';
 import { CredentialService } from 'src/credential/credential.service';
+import { DeviceService } from 'src/device/device.service';
 import { User } from 'src/generated/nestjs-dto/user.entity';
 import { HashingService } from 'src/hashing/hashing.service';
 import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
+import { MailerService } from 'src/mailer/mailer.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
@@ -35,7 +37,9 @@ export class AuthService extends BaseService {
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly tokenIdsStorage: TokenIdsStorage,
     private readonly loginAttemptService: LoginAttemptService,
+    private readonly deviceService: DeviceService,
     private readonly credentialService: CredentialService,
+    private readonly mailerService: MailerService,
   ) {
     super(prismaService)
   }
@@ -46,10 +50,14 @@ export class AuthService extends BaseService {
 
     try {
 
-      const { code, email,  password } = loginDto;
+      const { code, email, password } = loginDto;
 
       console.log(loginDto)
 
+
+      if (!email && !code) {
+        throw new BadRequestException('You must send code or email of user')
+      }
 
       if (email && !code) {
         user = await this.userService.findByEmail(email, txContext);
@@ -57,12 +65,9 @@ export class AuthService extends BaseService {
         user = await this.userService.findByCode(code, txContext);
       }
 
-      if(!email && !code){
-        throw new BadRequestException('Error')
-      }
 
       if (!user) {
-        throw new UnauthorizedException('Invalid code or Email');
+        throw new NotFoundException('User not found');
       }
 
       const userpassword = user.credential.password;
@@ -72,22 +77,34 @@ export class AuthService extends BaseService {
         throw new UnauthorizedException('Invalid password');
       }
 
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: true,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
-
       const tokens = await this.generateTokens(user);
+
+      await Promise.all([
+        this.deviceService.registerDevice({
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        }),
+        this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: true,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        })
+      ])
+
       return tokens
+
     } catch (error) {
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: false,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
+
+      if (user) {
+
+        await this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: false,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        });
+      }
       throw error
     }
   }
@@ -116,7 +133,21 @@ export class AuthService extends BaseService {
 
         const newUser = await this.userService.createUser(registerDto, txContext);
 
-        return this.generateTokenToValidateEmail(newUser, txContext);
+        const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
+
+        // register device and send email
+        await Promise.all([
+          this.mailerService.sendConfirmEmail(newUser, emailToken),
+          this.deviceService.registerDevice({
+            userAgent: registerDto.userAgent,
+            userId: newUser.idUser,
+
+          }, txContext)
+        ])
+
+        return {
+          success: true
+        }
 
       })
     } catch (error) {
@@ -126,7 +157,7 @@ export class AuthService extends BaseService {
 
   }
 
-  async generateTokens(user: User, txContext?: TransactionContext) {  
+  async generateTokens(user: User, txContext?: TransactionContext) {
 
     const refreshTokenId = randomUUID();
     const [accessToken, refreshToken] = await Promise.all([
@@ -160,7 +191,7 @@ export class AuthService extends BaseService {
     return emailToken
   }
 
-  async generateTokenResetPassword(emailDto: EmailDto , txContext?: TransactionContext) {
+  async generateTokenResetPassword(emailDto: EmailDto, txContext?: TransactionContext) {
     const userEmail = await this.userService.findByEmail(emailDto.email)
 
     if (!userEmail) {
@@ -175,7 +206,7 @@ export class AuthService extends BaseService {
 
     return passwordRestartToken;
   }
-  
+
 
   async requestNewEmailToken(requestNewEmailTokenDto: RequestNewEmailTokenDto, txContext?: TransactionContext) {
     const { email } = requestNewEmailTokenDto;
