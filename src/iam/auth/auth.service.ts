@@ -1,10 +1,15 @@
 import { BadRequestException, ConflictException, Inject, Injectable, PreconditionFailedException, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
+import { CredentialService } from 'src/credential/credential.service';
 import { User } from 'src/generated/nestjs-dto/user.entity';
 import { HashingService } from 'src/hashing/hashing.service';
 import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
@@ -12,14 +17,10 @@ import { EmailTokenDto } from './dto/email-token.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
-import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
-import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
 import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
-import { TransactionContext } from 'src/common/contexts/transaction.context';
-import { BaseService } from 'src/common/services/base.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClient } from '@prisma/client';
-import { CredentialService } from 'src/credential/credential.service';
+import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
+import { TokenIdsStorage } from './token-ids-storage';
+import { TokenType } from './enum/token-type.enum';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -30,7 +31,7 @@ export class AuthService extends BaseService {
     private readonly jwtService: JwtService,
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
-    private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
+    private readonly tokenIdsStorage: TokenIdsStorage,
     private readonly loginAttemptService: LoginAttemptService,
     private readonly credentialService: CredentialService,
   ) {
@@ -128,7 +129,7 @@ export class AuthService extends BaseService {
         refreshTokenId,
       }),
     ]);
-    await this.refreshTokenIdsStorage.insert(user.idUser, refreshTokenId, txContext);
+    await this.tokenIdsStorage.insert(user.idUser, refreshTokenId, TokenType.REFRESH_TOKEN, txContext);
     return {
       accessToken,
       refreshToken,
@@ -140,7 +141,7 @@ export class AuthService extends BaseService {
     const emailToken = await this.signToken(user.idUser, this.jwtConfiguration.emailTokenTtl, {
       emailTokenId
     })
-    await this.refreshTokenIdsStorage.insert(user.idUser, emailTokenId, txContext);
+    await this.tokenIdsStorage.insert(user.idUser, emailTokenId, TokenType.VERIFY_EMAIL, txContext);
 
     return emailToken
   }
@@ -173,13 +174,14 @@ export class AuthService extends BaseService {
         throw new PreconditionFailedException("Email already verified");
       }
 
-      const isValid = await this.refreshTokenIdsStorage.validate(
+      const isValid = await this.tokenIdsStorage.validate(
         user.idUser,
         emailTokenId,
+        TokenType.VERIFY_EMAIL,
         txContext,
       );
       if (isValid) {
-        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential, txContext);
+        await this.tokenIdsStorage.invalidate(user.credential.idCredential, TokenType.VERIFY_EMAIL, txContext);
 
         await this.userService.verifyEmail(user.credential.idCredential, txContext);
 
@@ -208,13 +210,14 @@ export class AuthService extends BaseService {
       });
       const user = await this.userService.findById(sub, txContext);
 
-      const isValid = await this.refreshTokenIdsStorage.validate(
+      const isValid = await this.tokenIdsStorage.validate(
         user.idUser,
         refreshTokenId,
+        TokenType.REFRESH_TOKEN,
         txContext
       );
       if (isValid) {
-        await this.refreshTokenIdsStorage.invalidate(user.credential.idCredential, txContext);
+        await this.tokenIdsStorage.invalidate(user.credential.idCredential, TokenType.REFRESH_TOKEN, txContext);
       } else {
         throw new Error("Refresh Token is invalid");
       }

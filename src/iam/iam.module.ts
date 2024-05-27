@@ -11,10 +11,10 @@ import { AuthController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
 import { AccessTokenGuard } from "./auth/guards/access-token.guard";
 import { AuthenticationGuard } from "./auth/guards/authentication.guard";
-import { RefreshTokenIdsStorage } from "./auth/refresh-token-ids-storage";
 import { PoliciesGuard } from "./authorization/guards/policies.guard";
 import jwtConfig from "./config/jwt.config";
 import { CredentialModule } from "src/credential/credential.module";
+import { TokenIdsStorage } from "./auth/token-ids-storage";
 
 @Module({
   imports: [
@@ -36,7 +36,7 @@ import { CredentialModule } from "src/credential/credential.module";
       provide: APP_GUARD,
       useClass: PoliciesGuard,
     },
-    RefreshTokenIdsStorage,
+    TokenIdsStorage,
     AuthService,
     AccessTokenGuard,
   ],

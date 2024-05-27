@@ -1,22 +1,22 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './user/user.module';
+import { ApplicationController } from './application/application.controller';
 import { ApplicationModule } from './application/application.module';
 import { ApplicationService } from './application/application.service';
-import { ApplicationController } from './application/application.controller';
-import { PrismaModule } from './prisma/prisma.module';
-import { CredentialModule } from './credential/credential.module';
-import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
-import { IamModule } from './iam/iam.module';
-import { RolesModule } from './roles/roles.module';
-import { PermissionModule } from './permission/permission.module';
-import { MenuModule } from './menu/menu.module';
 import { CaslModule } from './casl/casl.module';
+import { CredentialModule } from './credential/credential.module';
+import { IamModule } from './iam/iam.module';
+import { LoginAttemptModule } from './login-attempt/login-attempt.module';
+import { MenuModule } from './menu/menu.module';
+import { PermissionModule } from './permission/permission.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { RolesModule } from './roles/roles.module';
+import { SequenceCounterModule } from './sequence-counter/sequence-counter.module';
 import { TestModule } from './test/test.module';
 import { TutorModule } from './tutor/tutor.module';
-import { LoginAttemptModule } from './login-attempt/login-attempt.module';
-
+import { UserModule } from './user/user.module';
+import { MailerModule } from './mailer/mailer.module';
 @Module({
   imports: [
     PrismaModule,
@@ -32,6 +32,7 @@ import { LoginAttemptModule } from './login-attempt/login-attempt.module';
     TestModule,
     LoginAttemptModule,
     TutorModule,
+    MailerModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
