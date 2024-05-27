@@ -25,7 +25,7 @@ export class MenuService {
                     },
                 },
             },
-            // include maximo two levels
+            // include max two levels
             include: {
                 parent: {
                     include: {

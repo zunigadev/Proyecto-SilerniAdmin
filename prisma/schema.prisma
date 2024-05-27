@@ -48,12 +48,25 @@ model User {
   m_surname String
   status    String
 
-  //Relations
+  //Relations Credential
   credential   Credential @relation(fields: [credentialId], references: [idCredential])
   credentialId Int        @unique
 
-  roles       UserRole[]
-  permissions UserPermission[]
+  roles         UserRole[]
+  permissions   UserPermission[]
+  loginAttempts LoginAttempt[]
+}
+
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  username  String
+  timestamp DateTime @default(now())
+  success   Boolean
+  ipAddress String?
+  userAgent String?
+
+  user User? @relation(fields: [userId], references: [idUser])
 }
 
 model Role {
@@ -68,7 +81,7 @@ model Role {
 model Permission {
   id       Int              @id @default(autoincrement())
   effect   Boolean // true: allowed; false: deny
-  name     String
+  name     String           @unique
   resource String
   action   String
   menus    Menu[]
@@ -81,9 +94,9 @@ model Menu {
   name        String
   icon        String?
   link        String?
-  parentId    Int?         @default(-1)
-  parent      Menu?        @relation("Submenus", fields: [parentId], references: [id])
   submenus    Menu[]       @relation("Submenus")
+  parent      Menu?        @relation("Submenus", fields: [parentId], references: [id])
+  parentId    Int?         @default(dbgenerated())
   permissions Permission[]
 }
 
@@ -118,12 +131,15 @@ model UserPermission {
 }
 
 model Credential {
-  idCredential Int     @id @default(autoincrement())
-  code         String? @unique
-  email        String? @unique
-  password     String
-  repPassword  String
-  tokenId      String?
+  idCredential     Int     @id @default(autoincrement())
+  code             String? @unique
+  email            String? @unique
+  emailVerified    Boolean @default(false)
+  password         String
+  repPassword      String
+  refreshTokenId   String?
+  emailTokenId     String?
+  resetPassTokenId String?
 
   //Relations
   user             User?
@@ -140,7 +156,7 @@ model DataTutor {
   document     String? @map("document")
   phone        String? @map("phone")
   relationship String? @map("relationship")
-  email        String? @map("email")
+  email        String? @map("email") //Revisar
   gender       String? @map("gender")
 
   // Define the reverse relationship with PostulationChild
@@ -163,21 +179,37 @@ model PostulationChild {
   email                String? @map("email")
   address              String? @map("address")
   gender               String? @map("gender")
-  justification        String? @map("justification")
   grade                String? @map("grade")
-  postulationChildCol  String? @map("PostulationChildcol")
   level                String? @map("level")
   dataTutorIdDataTutor Int     @map("DataTutor_idDataTutor")
   status               String  @default("sending") @map("postulationStatus")
 
   // Define the relationship with DataTutor
-  dataTutor         DataTutor          @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
+  dataTutor DataTutor @relation(fields: [dataTutorIdDataTutor], references: [idDataTutor])
+
+  // Define the relationship with FilePostulation
   filesPostulations FilesPostulation[]
 
+  // Define the relationship with  Credential
   credential   Credential? @relation(fields: [credentialId], references: [idCredential])
   credentialId Int?        @unique
 
+  // Define the relationship with Reason
+  reasons Reason[]
+
   @@map("PostulationChild")
+}
+
+// Reason for rejection
+model Reason {
+  idReason Int    @id @default(autoincrement())
+  argument String
+
+  // Define the relationship with PostulationChild
+  postulationChild   PostulationChild? @relation(fields: [postulationChildId], references: [idPostulationChild])
+  postulationChildId Int?
+
+  @@map("Reason")
 }
 
 // Define the FilesPostulation table
@@ -191,4 +223,58 @@ model FilesPostulation {
   postulationChild PostulationChild @relation(fields: [postulationChildIdPostulationChild], references: [idPostulationChild])
 
   @@map("FilesPostulation")
+}
+
+/// Payments with Stripe
+
+// schema.prisma
+model Payment {
+  id             Int      @id @default(autoincrement())
+  stripeChargeId String
+  amount         Int
+  currency       String
+  description    String
+  status         String
+  customerEmail  String?
+  created        DateTime @default(now())
+}
+
+model FullStripePayment {
+  id                    Int      @id @default(autoincrement())
+  stripeChargeId        String   @unique
+  amount                Int
+  amountCaptured        Int?
+  amountRefunded        Int?
+  applicationFeeAmount  Int?
+  balanceTransaction    String?
+  billingDetailsName    String?
+  billingDetailsEmail   String?
+  billingDetailsPhone   String?
+  billingDetailsAddress Address? @relation(fields: [addressId], references: [id])
+  currency              String
+  customer              String?
+  description           String
+  failureCode           String?
+  failureMessage        String?
+  invoice               String?
+  metadata              Json?
+  paymentIntent         String?
+  paymentMethod         String?
+  receiptEmail          String?
+  receiptUrl            String?
+  refunded              Boolean  @default(false)
+  status                String
+  created               DateTime @default(now())
+  addressId             Int?
+}
+
+model Address {
+  id                Int                 @id @default(autoincrement())
+  city              String?
+  country           String?
+  line1             String?
+  line2             String?
+  postalCode        String?
+  state             String?
+  FullStripePayment FullStripePayment[]
 }

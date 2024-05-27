@@ -22,6 +22,10 @@ code: string  | null;
 })
 email: string  | null;
 @ApiProperty({
+  type: 'boolean',
+})
+emailVerified: boolean ;
+@ApiProperty({
   type: 'string',
 })
 password: string ;
@@ -33,7 +37,17 @@ repPassword: string ;
   type: 'string',
   nullable: true,
 })
-tokenId: string  | null;
+refreshTokenId: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+emailTokenId: string  | null;
+@ApiProperty({
+  type: 'string',
+  nullable: true,
+})
+resetPassTokenId: string  | null;
 @ApiProperty({
   required: false,
   nullable: true,

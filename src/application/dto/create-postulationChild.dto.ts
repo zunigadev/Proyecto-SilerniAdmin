@@ -55,12 +55,6 @@ export class CreatePostulationChildDto {
     required: false,
     nullable: true,
   })
-  justification?: string | null;
-  @ApiProperty({
-    type: 'string',
-    required: false,
-    nullable: true,
-  })
   grade?: string | null;
   @ApiProperty({
     type: 'string',

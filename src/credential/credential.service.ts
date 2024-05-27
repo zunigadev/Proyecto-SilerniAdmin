@@ -3,16 +3,30 @@ import { HashingService } from 'src/hashing/hashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SequenceCounterService } from 'src/sequence-counter/sequence-counter.service';
 import { CreateCredentialDto } from './dto/create-credential.dto';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
 
 @Injectable()
-export class CredentialService {
+export class CredentialService extends BaseService {
   private readonly sequenceName = 'student_code_sequence';
 
   constructor(
-    private readonly prismaService: PrismaService,
+    protected readonly prismaService: PrismaService,
     private readonly sequenceCounterService: SequenceCounterService,
     private readonly hashingService: HashingService,
-  ) { }
+  ) {
+    super(prismaService)
+  }
+
+  async findByEmail(email: string, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    return await prisma.credential.findUnique({
+      where: {
+        email: email,
+      },
+    });
+  }
 
   async generateTemporaryPassword(length: number) {
     const characters =
@@ -28,25 +42,30 @@ export class CredentialService {
     return passwordHash;
   }
 
-  async generateStudentCode(): Promise<string> {
+  async generateStudentCode(txContext?: TransactionContext) {
+
     const nextCode = await this.sequenceCounterService.nextVal(
-      this.sequenceName
+      this.sequenceName,
+      txContext,
     );
     return `ALU${nextCode.toString().padStart(6, '0')}`;
   }
 
-  async generateCredentialsToStudent() {
+  async generateCredentialsToStudent(txContext?: TransactionContext) {
+
     const temporaryPassword = await this.generateTemporaryPassword(8);
-    const studentCode = await this.generateStudentCode();
+    const studentCode = await this.generateStudentCode(txContext);
     return this.saveCredentials({
       code: studentCode,
       password: temporaryPassword,
       repPassword: temporaryPassword,
-    });
+    }, txContext);
   }
 
-  async generateCredentialsToTutor(email: string) {
-    const credentials = await this.prismaService.credential.findUnique({
+  async generateCredentialsToTutor(email: string, txContext: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    const credentials = await prisma.credential.findUnique({
       where: {
         email: email,
       },
@@ -62,12 +81,15 @@ export class CredentialService {
       email: email,
       password: temporaryPassword,
       repPassword: temporaryPassword,
-    });
+    },
+      txContext);
   }
 
   // Función para guardar credenciales
-  async saveCredentials(createCredentialDto: CreateCredentialDto) {
-    return await this.prismaService.credential.create({
+  async saveCredentials(createCredentialDto: CreateCredentialDto, txContext: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    return await prisma.credential.create({
       data: createCredentialDto,
     });
   }
