@@ -18,6 +18,7 @@ import { TutorModule } from './tutor/tutor.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
 import { ConfigModule } from '@nestjs/config';
+import { DeviceModule } from './device/device.module';
 import config from './config/configuration'
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import config from './config/configuration'
     LoginAttemptModule,
     TutorModule,
     MailerModule,
+    DeviceModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],

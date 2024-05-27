@@ -9,7 +9,22 @@ export class UpdateLoginAttemptDto {
   type: 'string',
   required: false,
 })
-username?: string ;
+location?: string ;
+@ApiProperty({
+  type: 'string',
+  required: false,
+})
+deviceType?: string ;
+@ApiProperty({
+  type: 'string',
+  required: false,
+})
+operatingSystem?: string ;
+@ApiProperty({
+  type: 'string',
+  required: false,
+})
+browser?: string ;
 @ApiProperty({
   type: 'boolean',
   required: false,

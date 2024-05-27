@@ -6,9 +6,11 @@ import { randomUUID } from 'crypto';
 import { TransactionContext } from 'src/common/contexts/transaction.context';
 import { BaseService } from 'src/common/services/base.service';
 import { CredentialService } from 'src/credential/credential.service';
+import { DeviceService } from 'src/device/device.service';
 import { User } from 'src/generated/nestjs-dto/user.entity';
 import { HashingService } from 'src/hashing/hashing.service';
 import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
+import { MailerService } from 'src/mailer/mailer.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
@@ -18,10 +20,9 @@ import { LoginAuthDto } from './dto/login-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
+import { TokenType } from './enum/token-type.enum';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { TokenIdsStorage } from './token-ids-storage';
-import { TokenType } from './enum/token-type.enum';
-import { MailerService } from 'src/mailer/mailer.service';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -34,6 +35,7 @@ export class AuthService extends BaseService {
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly tokenIdsStorage: TokenIdsStorage,
     private readonly loginAttemptService: LoginAttemptService,
+    private readonly deviceService: DeviceService,
     private readonly credentialService: CredentialService,
     private readonly mailerService: MailerService,
   ) {
@@ -60,22 +62,35 @@ export class AuthService extends BaseService {
         throw new UnauthorizedException('Invalid password');
       }
 
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: true,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
-
       const tokens = await this.generateTokens(user);
+
+      await Promise.all([
+        this.deviceService.registerDevice({
+          ip: loginDto.ip,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        }),
+        this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: true,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        })
+      ])
+
       return tokens
+
     } catch (error) {
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: false,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
+
+      if (user) {
+
+        await this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: false,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        });
+      }
       throw error
     }
   }

@@ -4,6 +4,7 @@ import {Credential} from './credential.entity'
 import {UserRole} from './userRole.entity'
 import {UserPermission} from './userPermission.entity'
 import {LoginAttempt} from './loginAttempt.entity'
+import {Device} from './device.entity'
 
 
 export class User {
@@ -52,4 +53,9 @@ permissions?: UserPermission[] ;
   required: false,
 })
 loginAttempts?: LoginAttempt[] ;
+@ApiProperty({
+  isArray: true,
+  required: false,
+})
+devices?: Device[] ;
 }

@@ -10,20 +10,26 @@ export class LoginAttempt {
 })
 id: number ;
 @ApiProperty({
-  type: 'integer',
-  format: 'int32',
-  nullable: true,
-})
-userId: number  | null;
-@ApiProperty({
-  type: 'string',
-})
-username: string ;
-@ApiProperty({
   type: 'string',
   format: 'date-time',
 })
 timestamp: Date ;
+@ApiProperty({
+  type: 'string',
+})
+location: string ;
+@ApiProperty({
+  type: 'string',
+})
+deviceType: string ;
+@ApiProperty({
+  type: 'string',
+})
+operatingSystem: string ;
+@ApiProperty({
+  type: 'string',
+})
+browser: string ;
 @ApiProperty({
   type: 'boolean',
 })
@@ -39,8 +45,12 @@ ipAddress: string  | null;
 })
 userAgent: string  | null;
 @ApiProperty({
-  required: false,
-  nullable: true,
+  type: 'integer',
+  format: 'int32',
 })
-user?: User  | null;
+userId: number ;
+@ApiProperty({
+  required: false,
+})
+user?: User ;
 }
