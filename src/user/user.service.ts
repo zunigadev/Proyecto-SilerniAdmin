@@ -19,7 +19,7 @@ export class UserService extends BaseService {
 
   async findAll(txContext?: TransactionContext): Promise<User[]> {
     const prisma = this.getPrismaClient(txContext)
-
+    
     return await prisma.user.findMany();
   }
 
