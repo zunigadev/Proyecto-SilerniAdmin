@@ -21,6 +21,7 @@ import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
 import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.error';
 import { TokenIdsStorage } from './token-ids-storage';
 import { TokenType } from './enum/token-type.enum';
+import { MailerService } from 'src/mailer/mailer.service';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -34,6 +35,7 @@ export class AuthService extends BaseService {
     private readonly tokenIdsStorage: TokenIdsStorage,
     private readonly loginAttemptService: LoginAttemptService,
     private readonly credentialService: CredentialService,
+    private readonly mailerService: MailerService,
   ) {
     super(prismaService)
   }
@@ -102,7 +104,13 @@ export class AuthService extends BaseService {
 
         const newUser = await this.userService.createUser(registerDto, txContext);
 
-        return this.generateTokenToValidateEmail(newUser, txContext);
+        const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
+
+        await this.mailerService.sendConfirmEmail(newUser, emailToken)
+
+        return {
+          success: true
+        }
 
       })
     } catch (error) {

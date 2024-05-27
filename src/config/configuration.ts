@@ -5,6 +5,8 @@ export default () => ({
         credentials: process.env.CORS_CREDENTIALS || true,
     },
     email: {
-        key: process.env.BREVO_API_KEY || '',
+        key: process.env.EMAIL_API_KEY || '',
+        sender: process.env.EMAIL_SENDER || '',
+        nameSender: process.env.EMAIL_NAME_SENDER || 'no reply',
     },
 });

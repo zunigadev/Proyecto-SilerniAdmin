@@ -129,6 +129,9 @@ export class UserService extends BaseService {
             },
           },
         },
+        include: {
+          credential: true
+        }
       });
     } catch (error) {
       console.error(error);
