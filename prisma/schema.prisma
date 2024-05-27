@@ -94,9 +94,9 @@ model Menu {
   name        String
   icon        String?
   link        String?
-  parentId    Int?         @default(-1)
-  parent      Menu?        @relation("Submenus", fields: [parentId], references: [id])
   submenus    Menu[]       @relation("Submenus")
+  parent      Menu?        @relation("Submenus", fields: [parentId], references: [id])
+  parentId    Int?         @default(dbgenerated())
   permissions Permission[]
 }
 

@@ -16,6 +16,7 @@ import { SequenceCounterModule } from './sequence-counter/sequence-counter.modul
 import { TestModule } from './test/test.module';
 import { TutorModule } from './tutor/tutor.module';
 import { UserModule } from './user/user.module';
+import { MailerModule } from './mailer/mailer.module';
 @Module({
   imports: [
     PrismaModule,
@@ -31,6 +32,7 @@ import { UserModule } from './user/user.module';
     TestModule,
     LoginAttemptModule,
     TutorModule,
+    MailerModule,
   ],
   controllers: [AppController, ApplicationController],
   providers: [AppService, ApplicationService],
