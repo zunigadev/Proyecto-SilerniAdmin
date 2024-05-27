@@ -38,7 +38,7 @@ export class TokenIdsStorage extends BaseService {
         } else if (tokenType === TokenType.VERIFY_EMAIL) {
             updateData = { emailTokenId: tokenId };
         } else if (tokenType === TokenType.RESET_PASSWORD) {
-            updateData = { passwordTokenId: tokenId };
+            updateData = { resetPassTokenId: tokenId };
         } else {
             throw new BadRequestException('Token Type not valid');
         }
@@ -94,7 +94,7 @@ export class TokenIdsStorage extends BaseService {
         } else if (tokenType === TokenType.VERIFY_EMAIL) {
             updateData = { emailTokenId: null };
         } else if (tokenType === TokenType.RESET_PASSWORD) {
-            updateData = { passwordTokenId: null };
+            updateData = { resetPassTokenId: null };
         } else {
             throw new BadRequestException('Token Type not valid');
         }

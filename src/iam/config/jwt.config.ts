@@ -7,6 +7,7 @@ export default registerAs("jwt", () => {
     issuer: process.env.JWT_TOKEN_ISSUER,
     accessTokenTtl: parseInt(process.env.JWT_ACCESS_TOKEN_TTL ?? "3600", 10),
     refreshTokenTtl: parseInt(process.env.JWT_REFRESH_TOKEN_TTL ?? "86400", 10),
-    emailTokenTtl: parseInt(process.env.JWT_EMAIL_TOKEN_TTL ?? "86400", 10),
+    emailTokenTtl: parseInt(process.env.JWT_RESET_TOKEN_TTL ?? "86400", 10),
+    resetPasswordTokenTtl: parseInt(process.env.JWT_RESET_TOKEN_TTL ?? "86400", 10),
   };
 });

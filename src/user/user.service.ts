@@ -102,7 +102,7 @@ export class UserService extends BaseService {
     try {
       const prisma = this.getPrismaClient(txContext)
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto);
+      console.log(createUserDto); //Prueba de consola
 
       if (!credential) {
         const temporaryPassword =
@@ -149,4 +149,29 @@ export class UserService extends BaseService {
       }
     })
   }
+
+  async changePassword(credentialId: number, newPassword: string, txContext?: TransactionContext) {
+    const prisma = this.getPrismaClient(txContext)
+
+    const credential = await prisma.credential.findUnique(
+      {where: {idCredential:credentialId}, 
+      select: { idCredential:true}
+    });
+
+    if(!credential) {
+      throw new NotFoundException('User not found')
+    }
+
+    const encryptedPassword = await this.hashingService.hash(newPassword)
+
+    await prisma.credential.update({
+      data: {
+        password: encryptedPassword
+      },
+      where: {
+        idCredential: credentialId
+      }
+    })
+  }
+
 }
