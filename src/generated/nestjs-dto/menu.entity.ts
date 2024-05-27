@@ -24,21 +24,21 @@ icon: string  | null;
 })
 link: string  | null;
 @ApiProperty({
-  type: 'integer',
-  format: 'int32',
-  nullable: true,
+  isArray: true,
+  required: false,
 })
-parentId: number  | null;
+submenus?: Menu[] ;
 @ApiProperty({
   required: false,
   nullable: true,
 })
 parent?: Menu  | null;
 @ApiProperty({
-  isArray: true,
-  required: false,
+  type: 'integer',
+  format: 'int32',
+  nullable: true,
 })
-submenus?: Menu[] ;
+parentId: number  | null;
 @ApiProperty({
   isArray: true,
   required: false,
