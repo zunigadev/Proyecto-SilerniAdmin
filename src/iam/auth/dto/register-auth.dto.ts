@@ -10,4 +10,5 @@ export class RegisterUserDto {
     repPassword?: string;
   };
   userAgent?: string = null;
+  rolesId?: number[]
 }

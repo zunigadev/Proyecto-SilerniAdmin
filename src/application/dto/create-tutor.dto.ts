@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CreatePostulationChildDto } from './create-postulationChild.dto';
 import { IsNotEmpty, MaxLength, MinLength } from 'class-validator';
 
 export class CreateTutorDto {
@@ -61,8 +60,6 @@ export class CreateTutorDto {
   @MinLength(8)
   @MaxLength(20)
   password: string;
-
-  postulationChildren?: CreatePostulationChildDto[];
 
   userAgent?: string;
 }

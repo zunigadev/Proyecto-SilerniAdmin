@@ -13,6 +13,9 @@ import { Auth } from 'src/iam/auth/decorators/auth.decorator';
 import { ApplicationService } from './application.service';
 import { CreateTutorDto } from './dto/create-tutor.dto';
 import { UpdateStatusChildDto } from './dto/update-status.dto';
+import { ActionAuthorization } from 'src/common/enums/action-authorization.enum';
+import { AppAbility } from 'src/casl/caslAbilityFactory';
+import { CheckPolicies } from 'src/iam/authorization/decorators/policies.decorator';
 
 @Controller('application')
 export class ApplicationController {
@@ -48,6 +51,7 @@ export class ApplicationController {
   }
 
   @Patch(':id')
+  @CheckPolicies((ability: AppAbility) => ability.can(ActionAuthorization.Update, 'application'))
   async changeStatus(
     @Param('id') id: number,
     @Body() changeStatus: UpdateStatusChildDto

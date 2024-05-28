@@ -19,7 +19,7 @@ export class UserService extends BaseService {
 
   async findAll(txContext?: TransactionContext): Promise<User[]> {
     const prisma = this.getPrismaClient(txContext)
-    
+
     return await prisma.user.findMany();
   }
 
@@ -102,7 +102,7 @@ export class UserService extends BaseService {
     try {
       const prisma = this.getPrismaClient(txContext)
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto); //Prueba de consola
+      console.log(createUserDto);
 
       if (!credential) {
         const temporaryPassword =
@@ -157,11 +157,12 @@ export class UserService extends BaseService {
     const prisma = this.getPrismaClient(txContext)
 
     const credential = await prisma.credential.findUnique(
-      {where: {idCredential:credentialId}, 
-      select: { idCredential:true}
-    });
+      {
+        where: { idCredential: credentialId },
+        select: { idCredential: true }
+      });
 
-    if(!credential) {
+    if (!credential) {
       throw new NotFoundException('User not found')
     }
 

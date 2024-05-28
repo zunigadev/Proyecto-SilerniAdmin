@@ -8,7 +8,6 @@ import { BaseService } from '../common/services/base.service';
 
 @Injectable()
 export class CredentialService extends BaseService {
-  private readonly sequenceName = 'student_code_sequence';
 
   constructor(
     protected readonly prismaService: PrismaService,
@@ -42,19 +41,19 @@ export class CredentialService extends BaseService {
     return passwordHash;
   }
 
-  async generateStudentCode(txContext?: TransactionContext) {
+  async generateCodeByRoleName(roleName: string, txContext?: TransactionContext) {
 
     const nextCode = await this.sequenceCounterService.nextVal(
-      this.sequenceName,
+      roleName,
       txContext,
     );
-    return `ALU${nextCode.toString().padStart(6, '0')}`;
+    return `${roleName.substring(0, 3)}${nextCode.toString().padStart(6, '0')}`;
   }
 
-  async generateCredentialsToStudent(txContext?: TransactionContext) {
+  async generateCredentialsToStudent(roleName: string, txContext?: TransactionContext) {
 
     const temporaryPassword = await this.generateTemporaryPassword(8);
-    const studentCode = await this.generateStudentCode(txContext);
+    const studentCode = await this.generateCodeByRoleName(roleName, txContext);
     return this.saveCredentials({
       code: studentCode,
       password: temporaryPassword,
