@@ -22,7 +22,7 @@ import { InvalidateRefreshTokenError } from './errors/invalidate-refresh-token.e
 import { TokenIdsStorage } from './token-ids-storage';
 import { TokenType } from './enum/token-type.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { EmailDto } from './dto/email.dto';
+import { CredentialsForResetDto } from './dto/credentials-for-reset.dto';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -46,19 +46,17 @@ export class AuthService extends BaseService {
 
     try {
 
-      const { code, email,  password } = loginDto;
-
-      console.log(loginDto)
+      const { code, email, password } = loginDto;
 
 
-      if (email && !code) {
+      if (!email && !code) {
+        throw new BadRequestException('Error: email or code must be provided');
+      }
+
+      if (email) {
         user = await this.userService.findByEmail(email, txContext);
       } else {
         user = await this.userService.findByCode(code, txContext);
-      }
-
-      if(!email && !code){
-        throw new BadRequestException('Error')
       }
 
       if (!user) {
@@ -126,7 +124,7 @@ export class AuthService extends BaseService {
 
   }
 
-  async generateTokens(user: User, txContext?: TransactionContext) {  
+  async generateTokens(user: User, txContext?: TransactionContext) {
 
     const refreshTokenId = randomUUID();
     const [accessToken, refreshToken] = await Promise.all([
@@ -160,22 +158,38 @@ export class AuthService extends BaseService {
     return emailToken
   }
 
-  async generateTokenResetPassword(emailDto: EmailDto , txContext?: TransactionContext) {
-    const userEmail = await this.userService.findByEmail(emailDto.email)
+  async generateTokenResetPassword(credforpassDto: CredentialsForResetDto, txContext?: TransactionContext) {
 
-    if (!userEmail) {
-      throw new NotFoundException('Email not found')
+    let user = null;
+    const { email, code } = credforpassDto;
+
+    if (!email && !code) {
+      throw new BadRequestException('Error: email or code must be provided')
     }
+    
+    
+    if (email) {
+      user = await this.userService.findByEmail(email, txContext);
+    } else {
+      user = await this.userService.findByCode(code, txContext);
+    }
+    
+
+    if (!user) {
+      throw new NotFoundException('Invalid code or Email')
+    }
+
+
     const passwordTokenId = randomUUID();
-    const passwordRestartToken = await this.signToken(userEmail.idUser, this.jwtConfiguration.resetPasswordTokenTtl, {
+    const passwordRestartToken = await this.signToken(user.idUser, this.jwtConfiguration.resetPasswordTokenTtl, {
       passwordTokenId
     })
 
-    await this.tokenIdsStorage.insert(userEmail.idUser, passwordTokenId, TokenType.RESET_PASSWORD, txContext)
+    await this.tokenIdsStorage.insert(user.idUser, passwordTokenId, TokenType.RESET_PASSWORD, txContext)
 
     return passwordRestartToken;
   }
-  
+
 
   async requestNewEmailToken(requestNewEmailTokenDto: RequestNewEmailTokenDto, txContext?: TransactionContext) {
     const { email } = requestNewEmailTokenDto;

@@ -35,7 +35,8 @@ export class ApplicationService extends BaseService {
     });
   }
 
-  async txCreateTutor(createTutor: CreateTutorDto) {
+  async 
+  txCreateTutor(createTutor: CreateTutorDto) {
     const prisma = this.getPrismaClient()
     try {
 

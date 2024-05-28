@@ -8,7 +8,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterUserDto } from './dto/register-auth.dto';
 import { EmailTokenDto } from './dto/email-token.dto';
 import { RequestNewEmailTokenDto } from './dto/request-new-email-token.dto';
-import { EmailDto } from './dto/email.dto';
+import { CredentialsForResetDto } from './dto/credentials-for-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Auth(AuthType.None)
@@ -52,7 +52,7 @@ export class AuthController {
 
   @Post("token-for-reset")
   @HttpCode(HttpStatus.OK)
-  tokenForResetPassword(@Body() email: EmailDto) {
+  tokenForResetPassword(@Body() email: CredentialsForResetDto) {
     return this.authService.generateTokenResetPassword(email)
   }
 
