@@ -25,6 +25,7 @@ import { TokenIdsStorage } from './token-ids-storage';
 import { TokenType } from './enum/token-type.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { EmailDto } from './dto/email.dto';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -40,6 +41,7 @@ export class AuthService extends BaseService {
     private readonly deviceService: DeviceService,
     private readonly credentialService: CredentialService,
     private readonly mailerService: MailerService,
+    private readonly rolesService: RolesService,
   ) {
     super(prismaService)
   }
@@ -51,9 +53,6 @@ export class AuthService extends BaseService {
     try {
 
       const { code, email, password } = loginDto;
-
-      console.log(loginDto)
-
 
       if (!email && !code) {
         throw new BadRequestException('You must send code or email of user')
@@ -108,50 +107,49 @@ export class AuthService extends BaseService {
       throw error
     }
   }
-
-  async register(registerDto: RegisterUserDto, txContext?: TransactionContext) {
-    if (txContext) {
-      const newUser = await this.userService.createUser(registerDto, txContext);
-
-      return this.generateTokenToValidateEmail(newUser, txContext);
-    }
-
+  async txRegister(registerDto: RegisterUserDto) {
     try {
-
-      const prisma = this.getPrismaClient()
-
-      return await prisma.$transaction(async (tx: PrismaClient) => {
+      return await this.prisma.$transaction(async (tx: PrismaClient) => {
         const txContext = new TransactionContext(tx)
 
-        // verify if exists credential with email sent
-        const credential = await this.credentialService.findByEmail(registerDto.credential.email, txContext)
-
-        if (credential) {
-          throw new ConflictException('Email already registered');
-        }
-        //
-
-        const newUser = await this.userService.createUser(registerDto, txContext);
-
-        const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
-
-        // register device and send email
-        await Promise.all([
-          this.mailerService.sendConfirmEmail(newUser, emailToken),
-          this.deviceService.registerDevice({
-            userAgent: registerDto.userAgent,
-            userId: newUser.idUser,
-
-          }, txContext)
-        ])
-
-        return {
-          success: true
-        }
-
+        return this.register(registerDto, txContext)
       })
     } catch (error) {
-      throw error
+
+    }
+  }
+
+  async register(registerDto: RegisterUserDto, txContext?: TransactionContext) {
+
+    // verify if exists credential with email sent
+    const credential = await this.credentialService.findByEmail(registerDto.credential.email, txContext)
+
+    if (credential) {
+      throw new ConflictException('Email already registered');
+    }
+    //
+
+    const newUser = await this.userService.createUser(registerDto, txContext)
+
+    // asign roles to user
+    if (registerDto.rolesId && registerDto.rolesId.length > 0) {
+      await this.rolesService.assignRolesToUser(newUser.idUser, registerDto.rolesId, txContext)
+    }
+
+    const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
+
+    // register device and send email
+    await Promise.all([
+      this.mailerService.sendConfirmEmail(newUser, emailToken),
+      this.deviceService.registerDevice({
+        userAgent: registerDto.userAgent,
+        userId: newUser.idUser,
+
+      }, txContext)
+    ])
+
+    return {
+      success: true
     }
 
 

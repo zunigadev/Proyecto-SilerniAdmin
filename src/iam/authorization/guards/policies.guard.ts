@@ -24,7 +24,7 @@ export class PoliciesGuard implements CanActivate {
     const user: ActiveUserData = context.switchToHttp().getRequest()[
       REQUEST_USER_KEY
     ];
-    console.log(user)
+
     const ability = await this.caslAbilityFactory.createForUser(user.sub);
 
     return policyHandlers.every(handler => this.execPolicyHandler(handler, ability));

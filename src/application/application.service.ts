@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { GenericRole } from 'src/common/enums/generic-role.enum';
 import { StatusApplication } from 'src/common/enums/status-application.enum';
 import { BaseService } from 'src/common/services/base.service';
 import { CredentialService } from 'src/credential/credential.service';
@@ -36,6 +37,7 @@ export class ApplicationService extends BaseService {
   }
 
   async txCreateTutor(createTutor: CreateTutorDto) {
+
     const prisma = this.getPrismaClient()
     try {
 
@@ -50,11 +52,20 @@ export class ApplicationService extends BaseService {
         }
         //
 
-        const { password, ...tutorToSave } = createTutor
+        const { password, userAgent, ...tutorToSave } = createTutor
 
         // create tutor on db
         await this.tutorService.create(tutorToSave, txContext)
         //
+
+
+        const tutorRole = await tx.role.findUniqueOrThrow({
+          where: {
+            name: GenericRole.TUTOR,
+          }
+        })
+
+        const newCode = await this.credentialService.generateCodeByRoleName(tutorRole.name, txContext)
 
         // register user
 
@@ -64,10 +75,12 @@ export class ApplicationService extends BaseService {
           p_surname: createTutor.lastName,
           status: 'normal',
           credential: {
+            code: newCode,
             email: createTutor.email,
             password: password,
           },
-          userAgent: '',
+          userAgent: userAgent,
+          rolesId: [tutorRole.id],
         },
           txContext)
         //
@@ -157,7 +170,7 @@ export class ApplicationService extends BaseService {
         // Crear credenciales para estudiante y tutor (si es necesario)
         if (statusApplication.status === StatusApplication.ACCEPTED) {
           const postulationChildCredential =
-            await this.credentialService.generateCredentialsToStudent(txContext);
+            await this.credentialService.generateCredentialsToStudent(GenericRole.STUDENT, txContext);
 
           // Vincular credenciales al estudiante y guardar nuevo estado.
           await prisma.postulationChild.update({

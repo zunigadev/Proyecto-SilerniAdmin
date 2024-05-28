@@ -18,7 +18,6 @@ export class DeviceService extends BaseService {
         registerDeviceLogin: RegisterDeviceLogin,
         txContext?: TransactionContext,
     ) {
-        console.log('register Device');
 
         const prisma = this.getPrismaClient(txContext)
 

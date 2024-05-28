@@ -20,7 +20,6 @@ export class ApplicationController {
 
   @Get(':id')
   getByID(@Param('id', ParseIntPipe) id: number) {
-    console.log(id); //Prueba de consola
     return this.applicationService.findByID(id);
   }
 
