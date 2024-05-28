@@ -4,25 +4,25 @@ import {ApiProperty} from '@nestjs/swagger'
 
 
 
-export class CreateLoginAttemptDto {
+export class UpdateDeviceDto {
   @ApiProperty({
   type: 'string',
+  required: false,
 })
-username: string ;
-@ApiProperty({
-  type: 'boolean',
-})
-success: boolean ;
+deviceType?: string ;
 @ApiProperty({
   type: 'string',
   required: false,
-  nullable: true,
 })
-ipAddress?: string  | null;
+operatingSystem?: string ;
 @ApiProperty({
   type: 'string',
   required: false,
-  nullable: true,
 })
-userAgent?: string  | null;
+browser?: string ;
+@ApiProperty({
+  type: 'string',
+  required: false,
+})
+uniqueDeviceId?: string ;
 }

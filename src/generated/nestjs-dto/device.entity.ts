@@ -1,14 +1,19 @@
 
 import {ApiProperty} from '@nestjs/swagger'
+import {User} from './user.entity'
 
 
-
-
-export class CreateLoginAttemptDto {
+export class Device {
   @ApiProperty({
-  type: 'string',
+  type: 'integer',
+  format: 'int32',
 })
-location: string ;
+id: number ;
+@ApiProperty({
+  type: 'string',
+  format: 'date-time',
+})
+timestamp: Date ;
 @ApiProperty({
   type: 'string',
 })
@@ -22,19 +27,16 @@ operatingSystem: string ;
 })
 browser: string ;
 @ApiProperty({
-  type: 'boolean',
+  type: 'integer',
+  format: 'int32',
 })
-success: boolean ;
+userId: number ;
+@ApiProperty({
+  required: false,
+})
+user?: User ;
 @ApiProperty({
   type: 'string',
-  required: false,
-  nullable: true,
 })
-ipAddress?: string  | null;
-@ApiProperty({
-  type: 'string',
-  required: false,
-  nullable: true,
-})
-userAgent?: string  | null;
+uniqueDeviceId: string ;
 }

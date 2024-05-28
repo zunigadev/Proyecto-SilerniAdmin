@@ -3,10 +3,14 @@ import { PrismaService } from 'src/prisma/prisma.service'; // Adjust the import 
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRolesDto } from './dto/update-role.dto';
 import { PrismaClient } from '@prisma/client';
+import { BaseService } from 'src/common/services/base.service';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
 
 @Injectable()
-export class RolesService {
-    constructor(private readonly prisma: PrismaService) { }
+export class RolesService extends BaseService {
+    constructor(protected readonly prisma: PrismaService) {
+        super(prisma)
+    }
 
     // Create role with permissions
     async createRoleWithPermissions(createRole: CreateRoleDto): Promise<any> {
@@ -48,30 +52,46 @@ export class RolesService {
     }
 
     // Assign roles to a user
-    async assignRolesToUser(userId: number, roleIds: number[]): Promise<any> {
+    async assignRolesToUser(userId: number, roleIds: number[], txContext?: TransactionContext): Promise<any> {
+        const prisma = this.getPrismaClient(txContext)
 
-        return await this.prisma.$transaction(async (tx: PrismaClient) => {
-
+        if (txContext) {
             // Disconnect existing roles
-            await tx.user.update({
-                where: { idUser: userId },
-                data: {
-                    roles: {
-                        set: [],
-                    },
-                },
+            await prisma.userRole.deleteMany({
+                where: { userId },
             });
 
             // Connect new roles
-            return tx.user.update({
-                where: { idUser: userId },
-                data: {
-                    roles: {
-                        connect: roleIds.map(id => ({ id })),
-                    },
-                },
+            const userRoles = roleIds.map(roleId => ({
+                userId,
+                roleId,
+            }));
+
+            return await prisma.userRole.createMany({
+                data: userRoles,
+                skipDuplicates: true,
             });
-        })
+        } else {
+
+            return await prisma.$transaction(async (tx: PrismaClient) => {
+
+                // Disconnect existing roles
+                await tx.userRole.deleteMany({
+                    where: { userId },
+                });
+
+                // Connect new roles
+                const userRoles = roleIds.map(roleId => ({
+                    userId,
+                    roleId,
+                }));
+
+                return await tx.userRole.createMany({
+                    data: userRoles,
+                    skipDuplicates: true,
+                });
+            })
+        }
     }
 
     // change status role

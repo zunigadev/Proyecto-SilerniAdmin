@@ -6,9 +6,11 @@ import { randomUUID } from 'crypto';
 import { TransactionContext } from 'src/common/contexts/transaction.context';
 import { BaseService } from 'src/common/services/base.service';
 import { CredentialService } from 'src/credential/credential.service';
+import { DeviceService } from 'src/device/device.service';
 import { User } from 'src/generated/nestjs-dto/user.entity';
 import { HashingService } from 'src/hashing/hashing.service';
 import { LoginAttemptService } from 'src/login-attempt/login-attempt.service';
+import { MailerService } from 'src/mailer/mailer.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from '../../user/user.service';
 import jwtConfig from '../config/jwt.config';
@@ -23,6 +25,7 @@ import { TokenIdsStorage } from './token-ids-storage';
 import { TokenType } from './enum/token-type.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { CredentialsForResetDto } from './dto/credentials-for-reset.dto';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -35,7 +38,10 @@ export class AuthService extends BaseService {
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
     private readonly tokenIdsStorage: TokenIdsStorage,
     private readonly loginAttemptService: LoginAttemptService,
+    private readonly deviceService: DeviceService,
     private readonly credentialService: CredentialService,
+    private readonly mailerService: MailerService,
+    private readonly rolesService: RolesService,
   ) {
     super(prismaService)
   }
@@ -60,7 +66,7 @@ export class AuthService extends BaseService {
       }
 
       if (!user) {
-        throw new UnauthorizedException('Invalid code or Email');
+        throw new NotFoundException('User not found');
       }
 
       const userpassword = user.credential.password;
@@ -70,55 +76,80 @@ export class AuthService extends BaseService {
         throw new UnauthorizedException('Invalid password');
       }
 
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: true,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
-
       const tokens = await this.generateTokens(user);
+
+      await Promise.all([
+        this.deviceService.registerDevice({
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        }),
+        this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: true,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        })
+      ])
+
       return tokens
+
     } catch (error) {
-      await this.loginAttemptService.logLoginAttempt(user.idUser, {
-        username: user.name,
-        success: false,
-        ipAddress: loginDto.ip,
-        userAgent: loginDto.userAgent,
-      }, txContext);
+
+      if (user) {
+
+        await this.loginAttemptService.logLoginAttempt({
+          ip: loginDto.ip,
+          success: false,
+          userAgent: loginDto.userAgent,
+          userId: user.idUser,
+        });
+      }
       throw error
+    }
+  }
+  async txRegister(registerDto: RegisterUserDto) {
+    try {
+      return await this.prisma.$transaction(async (tx: PrismaClient) => {
+        const txContext = new TransactionContext(tx)
+
+        return this.register(registerDto, txContext)
+      })
+    } catch (error) {
+
     }
   }
 
   async register(registerDto: RegisterUserDto, txContext?: TransactionContext) {
-    if (txContext) {
-      const newUser = await this.userService.createUser(registerDto, txContext);
 
-      return this.generateTokenToValidateEmail(newUser, txContext);
+    // verify if exists credential with email sent
+    const credential = await this.credentialService.findByEmail(registerDto.credential.email, txContext)
+
+    if (credential) {
+      throw new ConflictException('Email already registered');
+    }
+    //
+
+    const newUser = await this.userService.createUser(registerDto, txContext)
+
+    // asign roles to user
+    if (registerDto.rolesId && registerDto.rolesId.length > 0) {
+      await this.rolesService.assignRolesToUser(newUser.idUser, registerDto.rolesId, txContext)
     }
 
-    try {
+    const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
 
-      const prisma = this.getPrismaClient()
+    // register device and send email
+    await Promise.all([
+      this.mailerService.sendConfirmEmail(newUser, emailToken),
+      this.deviceService.registerDevice({
+        userAgent: registerDto.userAgent,
+        userId: newUser.idUser,
 
-      return await prisma.$transaction(async (tx: PrismaClient) => {
-        const txContext = new TransactionContext(tx)
+      }, txContext)
+    ])
 
-        // verify if exists credential with email sent
-        const credential = await this.credentialService.findByEmail(registerDto.credential.email, txContext)
-
-        if (credential) {
-          throw new ConflictException('Email already registered');
-        }
-        //
-
-        const newUser = await this.userService.createUser(registerDto, txContext);
-
-        return this.generateTokenToValidateEmail(newUser, txContext);
-
-      })
-    } catch (error) {
-      throw error
+    return {
+      success: true
     }
 
 

@@ -5,7 +5,8 @@ import {
   Param,
   ParseIntPipe,
   Patch,
-  Post
+  Post,
+  Req
 } from '@nestjs/common';
 import { AuthType } from 'src/common/enums/auth-type.enum';
 import { Auth } from 'src/iam/auth/decorators/auth.decorator';
@@ -19,7 +20,6 @@ export class ApplicationController {
 
   @Get(':id')
   getByID(@Param('id', ParseIntPipe) id: number) {
-    console.log(id); //Prueba de consola
     return this.applicationService.findByID(id);
   }
 
@@ -40,7 +40,8 @@ export class ApplicationController {
 
   @Post('tutor')
   @Auth(AuthType.None)
-  async createTutor(@Body() createTutorDto: CreateTutorDto) {
+  async createTutor(@Req() req: Request, @Body() createTutorDto: CreateTutorDto) {
+    createTutorDto.userAgent = req.headers['user-agent'];
     return await this.applicationService.txCreateTutor(createTutorDto);
 
   }

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateLoginAttemptDto } from './dto/create-loginAttempt.dto';
 import { BaseService } from 'src/common/services/base.service';
 import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { LogLoginAttemptDto } from './dto/log-login-attempt.dto';
+import { getInfoOfUserAgent, getLocationByIp } from 'src/common/utils/log-in-attempt-utils';
 
 @Injectable()
 export class LoginAttemptService extends BaseService {
@@ -13,19 +14,25 @@ export class LoginAttemptService extends BaseService {
     }
 
     async logLoginAttempt(
-        userId: number,
-        createLoginAttemptDto: CreateLoginAttemptDto,
+        logLoginAttemptDto: LogLoginAttemptDto,
         txContext?: TransactionContext
     ) {
-
         const prisma = this.getPrismaClient(txContext)
+
+        const userAgentInfo = getInfoOfUserAgent(logLoginAttemptDto.userAgent)
+        const location = getLocationByIp(logLoginAttemptDto.ip)
+
+
         return prisma.loginAttempt.create({
             data: {
-                username: createLoginAttemptDto.username,
-                success: createLoginAttemptDto.success,
-                ipAddress: createLoginAttemptDto.ipAddress,
-                userAgent: createLoginAttemptDto.userAgent,
-                userId: userId,
+                browser: userAgentInfo.browser,
+                deviceType: userAgentInfo.deviceType,
+                operatingSystem: userAgentInfo.operatingSystem,
+                location,
+                success: logLoginAttemptDto.success,
+                ipAddress: logLoginAttemptDto.ip,
+                userAgent: logLoginAttemptDto.userAgent,
+                userId: logLoginAttemptDto.userId,
             },
         });
     }

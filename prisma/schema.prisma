@@ -55,18 +55,34 @@ model User {
   roles         UserRole[]
   permissions   UserPermission[]
   loginAttempts LoginAttempt[]
+  devices       Device[]
 }
 
 model LoginAttempt {
-  id        Int      @id @default(autoincrement())
-  userId    Int?
-  username  String
-  timestamp DateTime @default(now())
-  success   Boolean
-  ipAddress String?
-  userAgent String?
+  id              Int      @id @default(autoincrement())
+  timestamp       DateTime @default(now())
+  location        String
+  deviceType      String
+  operatingSystem String
+  browser         String
+  success         Boolean
+  ipAddress       String?
+  userAgent       String?
+  userId          Int
+  user            User     @relation(fields: [userId], references: [idUser])
 
-  user User? @relation(fields: [userId], references: [idUser])
+  @@index([userId])
+}
+
+model Device {
+  id              Int      @id @default(autoincrement())
+  timestamp       DateTime @default(now())
+  deviceType      String
+  operatingSystem String
+  browser         String
+  userId          Int
+  user            User     @relation(fields: [userId], references: [idUser])
+  uniqueDeviceId  String   @unique
 }
 
 model Role {
@@ -91,7 +107,7 @@ model Permission {
 
 model Menu {
   id          Int          @id @default(autoincrement())
-  name        String
+  name        String       @unique
   icon        String?
   link        String?
   submenus    Menu[]       @relation("Submenus")

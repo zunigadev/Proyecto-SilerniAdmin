@@ -1,18 +1,18 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { MetadataScanner, ModulesContainer, Reflector } from '@nestjs/core';
 import { PrismaClient } from '@prisma/client';
+import { TransactionContext } from 'src/common/contexts/transaction.context';
+import { BaseService } from 'src/common/services/base.service';
 import { Permission } from 'src/generated/nestjs-dto/permission.entity';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class PermissionService implements OnModuleInit {
+export class PermissionService extends BaseService implements OnModuleInit {
 
     constructor(
-        private readonly prisma: PrismaService,
-        private readonly reflector: Reflector,
-        private readonly modulesContainer: ModulesContainer,
-        private readonly metadataScanner: MetadataScanner,
-    ) { }
+        protected readonly prisma: PrismaService,
+    ) {
+        super(prisma)
+    }
     async onModuleInit() {
         await this.registerPermissionsFromControllers();
     }
@@ -25,12 +25,12 @@ export class PermissionService implements OnModuleInit {
     }
 
     // assign permissions to user
-    async assignPermissionsToUser(userId: number, permissionIds: number[]): Promise<any> {
+    async assignPermissionsToUser(userId: number, permissionIds: number[], txContext?: TransactionContext): Promise<any> {
+        const prisma = this.getPrismaClient(txContext);
 
-        return await this.prisma.$transaction(async (tx: PrismaClient) => {
-
+        const updatePermissions = async (prismaClient: PrismaClient) => {
             // Disconnect existing permissions
-            await tx.user.update({
+            await prismaClient.user.update({
                 where: { idUser: userId },
                 data: {
                     permissions: {
@@ -40,7 +40,7 @@ export class PermissionService implements OnModuleInit {
             });
 
             // Connect new permissions
-            return tx.user.update({
+            return prismaClient.user.update({
                 where: { idUser: userId },
                 data: {
                     permissions: {
@@ -48,12 +48,22 @@ export class PermissionService implements OnModuleInit {
                     },
                 },
             });
-        })
+        };
+
+        if (txContext) {
+            // Use the provided transaction context
+            return updatePermissions(prisma);
+        } else {
+            // Create a new transaction
+            return await prisma.$transaction(updatePermissions);
+        }
     }
 
     // get list of permissions of user
-    async getUserPermissions(userId: number): Promise<Permission[]> {
-        const userWithPermissions = await this.prisma.user.findUnique({
+    async getUserPermissions(userId: number, txContext?: TransactionContext): Promise<Permission[]> {
+        const prisma = this.getPrismaClient(txContext)
+
+        const userWithPermissions = await prisma.user.findUnique({
             where: { idUser: userId },
             select: {
                 permissions: {

@@ -4,7 +4,7 @@ import {ApiProperty} from '@nestjs/swagger'
 
 
 
-export class ConnectMenuDto {
+export class ConnectDeviceDto {
   @ApiProperty({
   type: 'integer',
   format: 'int32',
@@ -17,5 +17,5 @@ id?: number ;
   required: false,
   nullable: true,
 })
-name?: string ;
+uniqueDeviceId?: string ;
 }

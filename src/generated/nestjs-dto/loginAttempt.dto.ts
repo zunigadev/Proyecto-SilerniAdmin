@@ -10,13 +10,25 @@ export class LoginAttemptDto {
 id: number ;
 @ApiProperty({
   type: 'string',
-})
-username: string ;
-@ApiProperty({
-  type: 'string',
   format: 'date-time',
 })
 timestamp: Date ;
+@ApiProperty({
+  type: 'string',
+})
+location: string ;
+@ApiProperty({
+  type: 'string',
+})
+deviceType: string ;
+@ApiProperty({
+  type: 'string',
+})
+operatingSystem: string ;
+@ApiProperty({
+  type: 'string',
+})
+browser: string ;
 @ApiProperty({
   type: 'boolean',
 })
