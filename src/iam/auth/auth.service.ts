@@ -25,6 +25,7 @@ import { TokenIdsStorage } from './token-ids-storage';
 import { TokenType } from './enum/token-type.enum';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { EmailDto } from './dto/email.dto';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -40,6 +41,7 @@ export class AuthService extends BaseService {
     private readonly deviceService: DeviceService,
     private readonly credentialService: CredentialService,
     private readonly mailerService: MailerService,
+    private readonly rolesService: RolesService,
   ) {
     super(prismaService)
   }
@@ -132,6 +134,11 @@ export class AuthService extends BaseService {
         //
 
         const newUser = await this.userService.createUser(registerDto, txContext);
+
+        // asign roles to user
+        if (!registerDto.rolesId && registerDto.rolesId.length > 0) {
+          await this.rolesService.assignRolesToUser(newUser.idUser, registerDto.rolesId, txContext)
+        }
 
         const emailToken = await this.generateTokenToValidateEmail(newUser, txContext);
 
