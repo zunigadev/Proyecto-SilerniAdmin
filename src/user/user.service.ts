@@ -102,7 +102,6 @@ export class UserService extends BaseService {
     try {
       const prisma = this.getPrismaClient(txContext)
       const { name, p_surname, m_surname, status, credential } = createUserDto;
-      console.log(createUserDto);
 
       if (!credential) {
         const temporaryPassword =

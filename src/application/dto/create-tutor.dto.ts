@@ -7,49 +7,57 @@ export class CreateTutorDto {
     required: false,
     nullable: true,
   })
-  name?: string | null;
+  @IsNotEmpty()
+  name: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  lastName?: string | null;
+  @IsNotEmpty()
+  lastName: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  documentType?: string | null;
+  @IsNotEmpty()
+  documentType: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  document?: string | null;
+  @IsNotEmpty()
+  document: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  phone?: string | null;
+  @IsNotEmpty()
+  phone: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  relationship?: string | null;
+  @IsNotEmpty()
+  relationship: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  email?: string | null;
+  @IsNotEmpty()
+  email: string;
   @ApiProperty({
     type: 'string',
     required: false,
     nullable: true,
   })
-  gender?: string | null;
+  @IsNotEmpty()
+  gender: string;
 
   @ApiProperty({
     type: 'string',

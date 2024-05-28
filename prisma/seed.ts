@@ -34,8 +34,28 @@ async function main() {
         });
     }
 
+    const applicationMenu = await prisma.menu.upsert({
+        where: { name: 'Application' },
+        update: {},
+        create: { name: 'Application' },
+    });
+
+    await prisma.menu.upsert({
+        where: { name: 'Create Application' },
+        update: {},
+        create: {
+            name: 'Create Application',
+            parentId: applicationMenu.id,
+
+            // added relation with permission
+            permissions: {
+                connect: { name: 'createApplication' },
+            },
+        },
+    });
+
     // Create RolePermissions
-    const tutorRole = await prisma.role.findUniqueOrThrow({ where: { name: 'Tutor' } });
+    const tutorRole = await prisma.role.findUniqueOrThrow({ where: { name: 'tutor' } });
     const createApplicationPermission = await prisma.permission.findUniqueOrThrow({ where: { name: 'createApplication' } });
 
     if (tutorRole && createApplicationPermission) {
@@ -46,6 +66,7 @@ async function main() {
         });
     }
 
+    console.log('Seed executed successfully')
 }
 
 main()

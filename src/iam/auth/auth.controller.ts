@@ -31,7 +31,7 @@ export class AuthController {
   registerUser(@Req() req: Request, @Body() registerDto: RegisterUserDto) {
 
     registerDto.userAgent = req.headers['user-agent'];
-    return this.authService.register(registerDto);
+    return this.authService.txRegister(registerDto);
   }
 
   @Post("refresh-tokens")
@@ -61,7 +61,6 @@ export class AuthController {
   @Post("reset-password")
   @HttpCode(HttpStatus.OK)
   resetPassword(@Body() newPassword: ResetPasswordDto) {
-    // console.log(req, newPassword)
     return this.authService.resetPassword(newPassword);
   }
 

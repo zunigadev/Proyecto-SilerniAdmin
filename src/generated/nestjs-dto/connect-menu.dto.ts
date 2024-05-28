@@ -8,6 +8,14 @@ export class ConnectMenuDto {
   @ApiProperty({
   type: 'integer',
   format: 'int32',
+  required: false,
+  nullable: true,
 })
-id: number ;
+id?: number ;
+@ApiProperty({
+  type: 'string',
+  required: false,
+  nullable: true,
+})
+name?: string ;
 }

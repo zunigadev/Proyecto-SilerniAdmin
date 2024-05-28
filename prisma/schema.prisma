@@ -107,7 +107,7 @@ model Permission {
 
 model Menu {
   id          Int          @id @default(autoincrement())
-  name        String
+  name        String       @unique
   icon        String?
   link        String?
   submenus    Menu[]       @relation("Submenus")
