@@ -37,6 +37,7 @@ export class ApplicationService extends BaseService {
   }
 
   async txCreateTutor(createTutor: CreateTutorDto) {
+
     const prisma = this.getPrismaClient()
     try {
 
@@ -51,7 +52,7 @@ export class ApplicationService extends BaseService {
         }
         //
 
-        const { password, ...tutorToSave } = createTutor
+        const { password, userAgent, ...tutorToSave } = createTutor
 
         // create tutor on db
         await this.tutorService.create(tutorToSave, txContext)
@@ -78,7 +79,7 @@ export class ApplicationService extends BaseService {
             email: createTutor.email,
             password: password,
           },
-          userAgent: createTutor.userAgent,
+          userAgent: userAgent,
           rolesId: [tutorRole.id],
         },
           txContext)
